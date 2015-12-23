@@ -1,0 +1,63 @@
+{
+    "versionLabel": "1.0",
+    "uuid": "48ecc80f-70d5-4194-8524-f5bd370047c7",
+    "appKeys": {
+    	"favorites": 0,
+		"near": 1,
+		"stopName": 2,
+		"stopNumber": 3,
+		"stopLines": 4,
+		"stopFavorite": 5,
+		"refresh": 6,
+		"appendStop": 7,
+		"appendLine": 8,
+		"lineNumber": 9,
+		"bus1Time": 10,
+		"bus2Time": 11,
+		"addFavorite": 12,
+		"removeFavorite": 13,
+		"noBusStops": 14,
+		"fetchStopDetail": 15,
+		"lastItem": 16
+    },
+    "longName": "Sevilla Bus",
+    "versionCode": 1,
+    "capabilities": [
+        "location"
+    ],
+    "shortName": "Sevilla Bus",
+    "companyName": "Alvaro Murillo",
+    "watchapp": {
+        "watchface": false
+    },
+    "resources": {
+        "media": [
+        {
+          "type": "png",
+          "name": "IMAGE_MENU_ICON",
+          "file": "img/menu_icon.png",
+		  "menuIcon": true
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_ACTION_BAR_UP",
+          "file": "img/up.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_ACTION_BAR_DOWN",
+          "file": "img/down.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_ACTION_BAR_CLOCK",
+          "file": "img/clock.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_FAVORITE",
+          "file": "img/favorite.png"
+        }
+      ]
+    }
+}
