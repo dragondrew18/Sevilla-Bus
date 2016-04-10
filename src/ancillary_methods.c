@@ -24,4 +24,20 @@ void graphics_draw_text_vertically_center(GContext* ctx,
 
 }
 
+AppMessageResult ancillary_app_message_outbox_begin(DictionaryIterator **iterator){
+	AppMessageResult res = app_message_outbox_begin(iterator);
+	if (res != APP_MSG_OK) {
+		// Error establishing the connection
+		APP_LOG(APP_LOG_LEVEL_ERROR, "Error establishing the connection: %d", (int)res);
+	}
+	return res;
+}
+AppMessageResult ancillary_app_message_outbox_send(void){
+	AppMessageResult res = app_message_outbox_send();
 
+	if(res != APP_MSG_OK ){
+		APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the data: %d", (int)res);
+	}
+
+	return res;
+}

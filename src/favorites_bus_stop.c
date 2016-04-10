@@ -38,7 +38,7 @@ static enum ListType listType;
 static BusStopListItem bus_stop_list_items[BUS_STOP_LIST_MAX_ITEMS];
 static int bus_stop_list_num_of_items = 0;
 static int bus_stop_list_active_item = -1;
-static int waiting_ready = 0;
+static int waiting_ready_attempts = 0;
 
 static BusStopListItem* get_bus_stop_scroll_item_at_index(int index) {
 	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
@@ -49,12 +49,12 @@ static BusStopListItem* get_bus_stop_scroll_item_at_index(int index) {
 }
 
 static void hide_bus_stop_detail_layers(bool hide) {
-	// APP_LOG(APP_LOG_LEVEL_DEBUG, "hide_bus_stop_detail_layers( %d )", hide);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "hide_bus_stop_detail_layers( %d )", hide);
 	layer_set_hidden(menu_layer_get_layer(ui.bus_stop_menu_layer), hide);
 }
 
 static void hide_feedback_layers(bool hide) {
-	// APP_LOG(APP_LOG_LEVEL_DEBUG, "hide_feedback_layers( %d )", hide);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "hide_feedback_layers( %d )", hide);
 	layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), hide);
 }
 
@@ -70,19 +70,16 @@ static void bus_stop_scroll_append(char *number, char *name, char *lines, int fa
 	bus_stop_list_items[bus_stop_list_num_of_items].favorite = favorite == 1;
 	bus_stop_list_num_of_items++;
 	
-	//if (bus_stop_row_actual < 0) {
-		hide_feedback_layers(true);
-		hide_bus_stop_detail_layers(false);
-		//bus_stop_row_actual = 0;
-//		display_bus_stop_at_index(0);
-//	}
-
+	hide_feedback_layers(true);
+	hide_bus_stop_detail_layers(false);
+	menu_layer_reload_data(ui.bus_stop_menu_layer);
 }
 
 static void bus_stop_scroll_out_sent_handler(DictionaryIterator *sent, void *context) {
 	// outgoing message was delivered
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "out_sent_handler");
-
+	// menu_layer_reload_data(ui.bus_stop_menu_layer);
+	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 }
 
 
@@ -115,11 +112,12 @@ static void bus_stop_scroll_in_received_handler(DictionaryIterator *iter, void *
 	
 	if (no_bus_stops) {
 				
-		//hide_bus_stop_detail_layers(true);
+		// hide_bus_stop_detail_layers(true);
 		hide_feedback_layers(false);
 
 		if (listType == ListTypeFavorites) {
-			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\nLong press in times button to add/remove favorites.");
+			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\n Search it !.");
+//			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\nLong press in times button to add/remove favorites.");
 		} else {
 			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
 		}
@@ -127,7 +125,7 @@ static void bus_stop_scroll_in_received_handler(DictionaryIterator *iter, void *
 	} else if (append_stop_tuple) {
 		bus_stop_scroll_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
 	}
-	menu_layer_reload_data(ui.bus_stop_menu_layer);
+	// menu_layer_reload_data(ui.bus_stop_menu_layer);
 
 }
 
@@ -182,9 +180,9 @@ static void execute_when_is_ready_true(void *none){
 			loadFavoritesStops();
 		}
 	}else{
-		waiting_ready++;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms(nº%d)...", (int) 150, waiting_ready);
-		app_timer_register(150, execute_when_is_ready_true, NULL);
+		waiting_ready_attempts++;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms(nº%d)...", (int) 200, waiting_ready_attempts);
+		app_timer_register(200, execute_when_is_ready_true, NULL);
 	}
 }
 
@@ -202,17 +200,20 @@ static void add_remove_bus_stop_to_favorites() {
 	
 	DictionaryIterator *iter;
 	
-	if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+	if (ancillary_app_message_outbox_begin(&iter) != APP_MSG_OK) {
 		return;
 	}
 	if (dict_write_cstring(iter, key, stopListItem->number) != DICT_OK) {
 		return;
 	}
-	app_message_outbox_send();
+	ancillary_app_message_outbox_send();
 	
 	stopListItem->favorite = !stopListItem->favorite;
 	// display_bus_stop_at_index(bus_stop_scroll_active_item);
 	//bus_stop_scroll_show_favorites();
+	hide_bus_stop_detail_layers(false);
+	hide_feedback_layers(true);
+
 }
 
 static void select2_click_handler(struct MenuLayer *menu_layer,
@@ -233,11 +234,15 @@ static void select2_long_click_handler(struct MenuLayer *menu_layer,
         void *callback_context) {
 
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "select_long_click_handler");
+	vibes_short_pulse();
 	if(bus_stop_row_actual == 0){
-		layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+
 	}else{
+		hide_feedback_layers(false);
 		add_remove_bus_stop_to_favorites();
 	}
+	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+
 }
 
 static uint16_t menu2_get_num_sections_callback(MenuLayer *me, void *data) {
@@ -245,8 +250,11 @@ static uint16_t menu2_get_num_sections_callback(MenuLayer *me, void *data) {
 }
 
 static uint16_t menu2_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
-//	return bus_stop_scroll_num_of_items;
-	return 44;
+	if(get_JS_is_ready()){
+		return bus_stop_list_num_of_items + 1;
+	}else{
+		return 1;
+	}
 }
 
 static int16_t menu2_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_index, void *data) {
@@ -375,18 +383,19 @@ static void bus_stop_window_load(Window *window) {
 	// Feedback Text Layer
 
 	GRect feedback_grect = bounds;
-	feedback_grect.origin.y = bounds.size.h / 2 -22;
+	feedback_grect.origin.y = bounds.size.h / 4 + 5;
 
 	ui.feedback_text_layer = text_layer_create(feedback_grect);
 	text_layer_set_text_color(ui.feedback_text_layer, GColorBlack);
 	text_layer_set_font(ui.feedback_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(ui.feedback_text_layer, GTextAlignmentCenter);
 
-	
+	layer_add_child(window_layer, text_layer_get_layer(ui.feedback_text_layer));
 	show_loading_feedback();
+
 	if(!get_JS_is_ready()){
-		int ms = 300;
-		waiting_ready++;
+		int ms = 500;
+		waiting_ready_attempts++;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms...", (int) ms);
 		app_timer_register(ms, execute_when_is_ready_true, NULL);
 	}else if (listType == ListTypeNear) {

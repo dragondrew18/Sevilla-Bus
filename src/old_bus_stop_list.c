@@ -124,6 +124,10 @@ static void bus_stop_list_append(char *number, char *name, char *lines, int favo
 		display_bus_stop_at_index(0);
 	}
 	
+	if(old_listType == ListTypeNear && old_bus_stop_list_num_of_items == 1){
+		vibes_short_pulse();
+	}
+
 	update_action_bar();
 }
 
