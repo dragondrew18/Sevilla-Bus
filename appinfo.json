@@ -1,6 +1,6 @@
 {
     "versionLabel": "1.0",
-    "uuid": "48ecc80f-70d5-4194-8524-f5bd370047c7",
+    "uuid": "50bfdd11-856c-479c-b3a6-827578d12651",
     "appKeys": {
     	"favorites": 0,
 		"near": 1,
@@ -18,14 +18,15 @@
 		"removeFavorite": 13,
 		"noBusStops": 14,
 		"fetchStopDetail": 15,
-		"lastItem": 16
+		"lastItem": 16,
+		"AppKeyJSReady": 17
     },
-    "longName": "Sevilla Bus",
+    "longName": "Sevilla Bus 2",
     "versionCode": 1,
     "capabilities": [
         "location"
     ],
-    "shortName": "Sevilla Bus",
+    "shortName": "Sevilla Bus 2",
     "companyName": "Alvaro Murillo",
     "watchapp": {
         "watchface": false

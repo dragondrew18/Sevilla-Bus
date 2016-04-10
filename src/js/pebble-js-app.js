@@ -8483,9 +8483,8 @@ function getTiempoNodo(codigo) {
 	var response;
 	var body = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http" ><soap:Body><getTiemposNodo xmlns="http://services.infotusws.tussam.com/"><codigo xmlns="">' + codigo + '</codigo></getTiemposNodo></soap:Body></soap:Envelope>';
 	var req = new XMLHttpRequest();
-	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true);
-	req.setRequestHeader("Authorization", "Basic " + Base64.encode("infotus-usermobile" + ":" + "2infotus0user1mobile2"));
-  req.setRequestHeader("Content-Type", "text/xml; charset=utf-8");
+	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true, "infotus-usermobile", "2infotus0user1mobile2");
+	req.setRequestHeader("Content-Type", "text/xml; charset=utf-8");
     req.setRequestHeader("SOAPAction", "");
 	req.setRequestHeader("deviceid", Pebble.getAccountToken());
 	req.onload = function(e){
@@ -8522,168 +8521,18 @@ function getTiempoNodo(codigo) {
 	req.send(body);
 }
 
-  /**
-*
-*  Base64 encode / decode
-*  http://www.webtoolkit.info/
-*
-**/
-var Base64 = {
-
-// private property
-_keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
-
-// public method for encoding
-encode : function (input) {
-    var output = "";
-    var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-    var i = 0;
-
-    input = Base64._utf8_encode(input);
-
-    while (i < input.length) {
-
-        chr1 = input.charCodeAt(i++);
-        chr2 = input.charCodeAt(i++);
-        chr3 = input.charCodeAt(i++);
-
-        enc1 = chr1 >> 2;
-        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-        enc4 = chr3 & 63;
-
-        if (isNaN(chr2)) {
-            enc3 = enc4 = 64;
-        } else if (isNaN(chr3)) {
-            enc4 = 64;
-        }
-
-        output = output +
-        this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
-        this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
-
-    }
-
-    return output;
-},
-
-// public method for decoding
-decode : function (input) {
-    var output = "";
-    var chr1, chr2, chr3;
-    var enc1, enc2, enc3, enc4;
-    var i = 0;
-
-    input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-
-    while (i < input.length) {
-
-        enc1 = this._keyStr.indexOf(input.charAt(i++));
-        enc2 = this._keyStr.indexOf(input.charAt(i++));
-        enc3 = this._keyStr.indexOf(input.charAt(i++));
-        enc4 = this._keyStr.indexOf(input.charAt(i++));
-
-        chr1 = (enc1 << 2) | (enc2 >> 4);
-        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-        chr3 = ((enc3 & 3) << 6) | enc4;
-
-        output = output + String.fromCharCode(chr1);
-
-        if (enc3 != 64) {
-            output = output + String.fromCharCode(chr2);
-        }
-        if (enc4 != 64) {
-            output = output + String.fromCharCode(chr3);
-        }
-
-    }
-
-    output = Base64._utf8_decode(output);
-
-    return output;
-
-},
-
-// private method for UTF-8 encoding
-_utf8_encode : function (string) {
-    string = string.replace(/\r\n/g,"\n");
-    var utftext = "";
-
-    for (var n = 0; n < string.length; n++) {
-
-        var c = string.charCodeAt(n);
-
-        if (c < 128) {
-            utftext += String.fromCharCode(c);
-        }
-        else if((c > 127) && (c < 2048)) {
-            utftext += String.fromCharCode((c >> 6) | 192);
-            utftext += String.fromCharCode((c & 63) | 128);
-        }
-        else {
-            utftext += String.fromCharCode((c >> 12) | 224);
-            utftext += String.fromCharCode(((c >> 6) & 63) | 128);
-            utftext += String.fromCharCode((c & 63) | 128);
-        }
-
-    }
-
-    return utftext;
-},
-
-// private method for UTF-8 decoding
-_utf8_decode : function (utftext) {
-    var string = "";
-    var i = 0;
-    var c = c1 = c2 = 0;
-
-    while ( i < utftext.length ) {
-
-        c = utftext.charCodeAt(i);
-
-        if (c < 128) {
-            string += String.fromCharCode(c);
-            i++;
-        }
-        else if((c > 191) && (c < 224)) {
-            c2 = utftext.charCodeAt(i+1);
-            string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
-            i += 2;
-        }
-        else {
-            c2 = utftext.charCodeAt(i+1);
-            c3 = utftext.charCodeAt(i+2);
-            string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-            i += 3;
-        }
-
-    }
-
-    return string;
-}
-
-}
-
 function getNodosCercanos(position) {
-  
-  //console.log(position.coords.latitude);
-  //console.log(position.coords.longitude);
-	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + /*37.3605505*/ position.coords.latitude +'</latitud><longitud xmlns="">' + /*-5.9882894*/ position.coords.longitude + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+
+	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + position.coords.latitude +'</latitud><longitud xmlns="">' + position.coords.longitude + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
 	var req = new XMLHttpRequest();
-	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true);
-  req.setRequestHeader("Authorization", "Basic " + Base64.encode("infotus-usermobile" + ":" + "2infotus0user1mobile2"));
+	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true, "infotus-usermobile", "2infotus0user1mobile2");
 	req.setRequestHeader("Content-Type", "text/xml; charset=utf-8");
     req.setRequestHeader("SOAPAction", "");
 	req.setRequestHeader("deviceid", Pebble.getAccountToken());
-  //console.log(Pebble.getAccountToken());
 	req.onload = function(e){
 		if (req.readyState == 4) {
-      //console.log(req.status);
-			if(req.status == 200 || req.status == 0) {
- 				//console.log("responseText" + req.responseText); 
-/* 				console.log("Latitude: " + position.coords.latitude); */
-/*        console.log("Longitude: " + position.coords.longitude); */ 
-                
+			if(req.status == 200) {
+/* 				console.log("responseText" + req.responseText); */
 				parseNearBusStops(req.responseText, function(stops){
 						
 					lastStops = stops;					
@@ -8712,8 +8561,7 @@ Pebble.addEventListener("appmessage", function(e) {
 	}	
 	
 	if(e.payload["near"]) {
-		var locationWatcher = navigator.geolocation.getCurrentPosition(getNodosCercanos, locationError, locationOptions);
-    // console.log("test");
+		var locationWatcher = window.navigator.geolocation.getCurrentPosition(getNodosCercanos, locationError, locationOptions);
 	}
 	
 	if(e.payload["addFavorite"]) {
@@ -8728,6 +8576,12 @@ Pebble.addEventListener("appmessage", function(e) {
 		getTiempoNodo(e.payload["fetchStopDetail"]);
 	}
 
+});
+Pebble.addEventListener('ready', function() {
+  console.log('PebbleKit JS ready.');
+
+  // Update s_js_ready on watch
+  Pebble.sendAppMessage({'AppKeyJSReady': 1});
 });
 
 },{"xml2js":17}]},{},[37])
