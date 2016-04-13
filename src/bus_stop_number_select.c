@@ -1,7 +1,7 @@
 #include <pebble.h>
 #include "keys.h"
-#include "old_menu.h"
 #include "bus_stop_detail.h"
+#include "favorites_bus_stop.h"
 
 static void time_window_load(Window* window);
 static void time_window_unload(Window* window);
@@ -157,6 +157,7 @@ static void back_click_handler(ClickRecognizerRef recognizer, void *context) {
 	s_selection--;
 
 	if(s_selection == -1) {
+		set_list_type_to_near();
 		window_stack_pop(true);
 	}
 	else
@@ -236,5 +237,8 @@ static void time_window_unload(Window *window) {
 	}
 	layer_destroy(ui.s_canvas_layer);
 	//window_destroy(window);
+}
+void win_edit_deinit(void){
+	window_destroy(ui.s_time_window);
 }
 

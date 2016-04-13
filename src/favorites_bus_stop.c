@@ -1,8 +1,9 @@
 #include <pebble.h>
 #include "bus_stop_detail.h"
+#include "bus_stop_number_select.h"
 #include "ancillary_methods.h"
 #include "keys.h"
-#include "old_menu.h"
+//#include "old_menu.h"
 
 enum ListType {
 	ListTypeFavorites,
@@ -35,7 +36,13 @@ static uint16_t bus_stop_row_actual;
 
 static enum ListType listType = ListTypeFavorites;
 
-static BusStopListItem bus_stop_list_items[BUS_STOP_LIST_MAX_ITEMS];
+void bus_stop_show_near(); // Declaration
+void bus_stop_show_favorites(); // Declaration
+static void show_loading_feedback(); // Declaration
+void bus_stop_show_favorites_return();
+
+
+
 static BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
 static BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];
 static int bus_stop_list_num_of_items = 0;
@@ -44,13 +51,8 @@ static int waiting_ready_attempts = 0;
 
 static int test_iter = 0;
 
-static BusStopListItem* get_bus_stop_scroll_item_at_index(int index) {
-	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
-		return NULL;
-	} else {
-		return &bus_stop_list_items[index];
-	}
-}
+ClickConfigProvider previous_ccp;
+
 
 static BusStopListItem* get_bus_stop_list_favorites_at_index(int index) {
 	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
@@ -66,6 +68,10 @@ static BusStopListItem* get_bus_stop_list_near_at_index(int index) {
 	} else {
 		return &bus_stop_list_near[index];
 	}
+}
+
+void set_list_type_to_near(void *context) {
+	listType = ListTypeNear;
 }
 
 static void hide_bus_stop_detail_layers(bool hide) {
@@ -84,12 +90,6 @@ static void bus_stop_scroll_append(char *number, char *name, char *lines, int fa
 		return;
 	}
 	
-	strcpy(bus_stop_list_items[bus_stop_list_num_of_items].number, number);
-	strcpy(bus_stop_list_items[bus_stop_list_num_of_items].name, name);
-	strcpy(bus_stop_list_items[bus_stop_list_num_of_items].lines, lines);
-	bus_stop_list_items[bus_stop_list_num_of_items].favorite = favorite == 1;
-	bus_stop_list_num_of_items++;
-	
 	if(listType == ListTypeNear){
 		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].number, number);
 		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].name, name);
@@ -101,6 +101,8 @@ static void bus_stop_scroll_append(char *number, char *name, char *lines, int fa
 		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].lines, lines);
 		bus_stop_list_favorites[bus_stop_list_num_of_items].favorite = favorite == 1;
 	}
+	bus_stop_list_num_of_items++;
+
 	if(listType == ListTypeNear && bus_stop_list_num_of_items == 1){
 		vibes_short_pulse();
 	}
@@ -221,11 +223,18 @@ static void execute_when_is_ready_true(void *none){
 	}
 }
 
+static void clean_menu(){
+
+}
 
 static void add_remove_bus_stop_to_favorites() {
 	
 	uint32_t key;
-	BusStopListItem *stopListItem = get_bus_stop_scroll_item_at_index(bus_stop_row_actual-1);
+	BusStopListItem *stopListItem = NULL;
+	if(listType == ListTypeFavorites)
+		stopListItem = get_bus_stop_list_favorites_at_index(bus_stop_row_actual - 1);
+	else if (listType == ListTypeNear)
+		stopListItem = get_bus_stop_list_near_at_index(bus_stop_row_actual - 1);
 	
 	if (stopListItem->favorite) {
 		key = TUSSAM_KEY_REMOVE_FAVORITE;
@@ -257,9 +266,17 @@ static void select2_click_handler(struct MenuLayer *menu_layer,
 
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "select_click_handler");
 	if(bus_stop_row_actual == 0){
-		main_menu_load();
+		if(listType == ListTypeFavorites){
+			bus_stop_show_near();
+			bus_stop_list_num_of_items = 0;
+		}else if (listType == ListTypeNear)
+			win_edit_show();
 	}else{
-		BusStopListItem *stopListItem = get_bus_stop_scroll_item_at_index(bus_stop_row_actual - 1);
+		BusStopListItem *stopListItem = NULL;
+		if(listType == ListTypeFavorites)
+			stopListItem = get_bus_stop_list_favorites_at_index(bus_stop_row_actual - 1);
+		else if (listType == ListTypeNear)
+			stopListItem = get_bus_stop_list_near_at_index(bus_stop_row_actual - 1);
 		bus_stop_detail_show(stopListItem->number, stopListItem->name);
 	}
 }
@@ -296,6 +313,27 @@ static int16_t menu2_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_ind
 	return 44;
 }
 
+static void click_back_action(ClickRecognizerRef recognizer, void *context) {
+
+	if(listType == ListTypeNear){
+		window_stack_pop(true);
+		listType = ListTypeFavorites;
+		show_loading_feedback();
+		clean_menu();
+		bus_stop_list_num_of_items = 0;
+
+		menu_layer_reload_data(ui.bus_stop_menu_layer);
+		bus_stop_show_favorites_return();
+	} else
+		window_stack_pop_all(true);
+}
+
+static void force_back_button(void *context){
+	previous_ccp(context);
+
+	window_single_click_subscribe(BUTTON_ID_BACK, click_back_action);
+}
+
 static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
 
 	BusStopListItem *act_bus_stop;
@@ -305,12 +343,6 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 	}else{
 		act_bus_stop = get_bus_stop_list_favorites_at_index(cell_index->row);
 	}
-	/*
-	BusStopListItem *act_bus_stop = get_bus_stop_scroll_item_at_index(cell_index->row);
-	BusStopListItem *act_bus_stop_favorites = get_bus_stop_list_favorites_at_index(cell_index->row);
-	BusStopListItem *act_bus_stop_near = get_bus_stop_list_near_at_index(cell_index->row);
-*/
-
 
 	graphics_context_set_text_color(ctx, GColorBlack);
 	GRect detail_rect = GRect(43, 0, 99, 42);
@@ -346,7 +378,10 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 							center_y + dif_radius + VIEW_SYMBOL_LENS_RADIUS));
 		}
 	}else{
-		act_bus_stop = get_bus_stop_scroll_item_at_index(cell_index->row -1);
+		if(listType == ListTypeNear)
+			act_bus_stop = get_bus_stop_list_near_at_index(cell_index->row -1);
+		else
+			act_bus_stop = get_bus_stop_list_favorites_at_index(cell_index->row -1);
 
 		if(cell_index->row == bus_stop_row_actual){
 			// Bus Stop Lines
@@ -449,6 +484,10 @@ static void bus_stop_window_load(Window *window) {
 		loadFavoritesStops();
 	}
 
+	//force_back_button(ui.window, ui.bus_stop_menu_layer);
+	previous_ccp = window_get_click_config_provider(ui.window);
+	window_set_click_config_provider_with_context(ui.window, force_back_button, ui.bus_stop_menu_layer);
+
 }
 
 
@@ -466,8 +505,14 @@ static void bus_stop_window_unload(Window *window) {
 static void bus_stop_window_appear(Window *window) {
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "bus_stop_window_appear");
 	test_iter++;
+	bus_stop_list_num_of_items = 0;
 	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "This windows appear... %d times", test_iter);
-
+	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+	menu_layer_reload_data(ui.bus_stop_menu_layer);
+	if(listType == ListTypeNear){
+		show_loading_feedback();
+		loadNearStops();
+	}
 }
 
 static void bus_stop_window_disappear(Window *window) {
@@ -475,8 +520,9 @@ static void bus_stop_window_disappear(Window *window) {
 	test_iter++;
 	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "This windows disappear... %d times", test_iter);
 
-	listType = ListTypeFavorites;
-
+//	listType = ListTypeFavorites;
+	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+	menu_layer_reload_data(ui.bus_stop_menu_layer);
 }
 
 static void register_app_message_callbacks() {
@@ -485,6 +531,7 @@ static void register_app_message_callbacks() {
 	app_message_register_inbox_dropped(bus_stop_scroll_in_dropped_handler);
 	app_message_register_outbox_sent(bus_stop_scroll_out_sent_handler);
 	app_message_register_outbox_failed(bus_stop_scroll_out_failed_handler);
+
 }
 
 static void load_view_for_bus_stops_type(int _listType) {
@@ -498,6 +545,21 @@ static void load_view_for_bus_stops_type(int _listType) {
 void bus_stop_show_favorites(void) {
 	
 	load_view_for_bus_stops_type(ListTypeFavorites);
+}
+
+void bus_stop_show_favorites_return(void) {
+
+	//load_view_for_bus_stops_type(ListTypeFavorites);
+
+	listType = ListTypeFavorites;
+	register_app_message_callbacks();
+	show_loading_feedback();
+	loadFavoritesStops();
+
+	clean_menu();
+	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+	menu_layer_reload_data(ui.bus_stop_menu_layer);
+	window_stack_push(ui.window, false /* Animated */);
 }
 
 void favorites_bus_stop_init(void) {
@@ -517,18 +579,33 @@ void favorites_bus_stop_init(void) {
 
 void favorites_bus_stop_deinit(void) {
 	window_destroy(ui.window);
-
 }
 
+void bus_stop_show_near_seg(void) {
+	listType = ListTypeNear;
+	show_loading_feedback();
+	loadNearStops();
+	clean_menu();
+	load_view_for_bus_stops_type(ListTypeNear);
+
+	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+	menu_layer_reload_data(ui.bus_stop_menu_layer);
+	//window_stack_push(ui.window, true /* Animated */);
+}
 
 void bus_stop_show_near(void) {
-	//bus_stop_window_unload(ui.window);
-	//favorites_bus_stop_deinit();
-	listType = ListTypeNear;
-	//favorites_bus_stop_init();
-	loadNearStops();
-	load_view_for_bus_stops_type(ListTypeNear);
-	menu_layer_reload_data(ui.bus_stop_menu_layer);
-	//loadNearStops();
-
+//	//bus_stop_window_unload(ui.window);
+//	//favorites_bus_stop_deinit();
+//	listType = ListTypeNear;
+//	//favorites_bus_stop_init();
+//	loadNearStops();
+//	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+//	menu_layer_reload_data(ui.bus_stop_menu_layer);
+//	load_view_for_bus_stops_type(ListTypeNear);
+//	menu_layer_reload_data(ui.bus_stop_menu_layer);
+//	//loadNearStops();
+//	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+	bus_stop_show_near_seg();
 }
+
+

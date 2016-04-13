@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include "keys.h"
+#include "ancillary_methods.h"
 
 #define BUS_STOP_DETAIL_NAME_TEXT_LENGTH (60)
 #define BUS_STOP_DETAIL_NUMBER_TEXT_LENGTH (6)
@@ -27,6 +28,8 @@ typedef struct {
 } StopDetailItem;
 
 static StopDetailItem s_stop_detail;
+
+static uint16_t times_row_actual = 0;
 
 
 void set_bus_stop_list_hidden(bool hidden) {
@@ -99,7 +102,7 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data) {
 }
 
 static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
-	return s_stop_detail.number_of_lines;
+	return s_stop_detail.number_of_lines + 1;
 }
 
 static int16_t menu_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_index, void *data) {
@@ -113,41 +116,65 @@ static bool got_estimate(char *estimate) {
 
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
 	
-	LineTimesItem lineTimeItem = s_stop_detail.linesTimes[cell_index->row];
 	
-	bool got_estimate_1 = got_estimate(lineTimeItem.bus1);
-	bool got_estimate_2 = got_estimate(lineTimeItem.bus2);
-	
-	graphics_context_set_text_color(ctx, GColorBlack);
-	
-	// Line Number
-	graphics_draw_text(ctx, lineTimeItem.name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(2, 5, 30, 24), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+	if(cell_index->row == 0){
+		GRect detail_rect = GRect(43, 0, 99, 42);
+		GRect bus_stop_rect = GRect(2, 0, 45, 42);
+
+		// Bus Stop Name
+		graphics_draw_text_vertically_center(ctx, s_stop_detail.name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+				detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+
+		// Line Number
+		graphics_draw_text_vertically_center(ctx, s_stop_detail.number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+	}else{
+		LineTimesItem lineTimeItem = s_stop_detail.linesTimes[(cell_index->row) - 1];
 		
-	if (got_estimate_1 && got_estimate_2) {
+		bool got_estimate_1 = got_estimate(lineTimeItem.bus1);
+		bool got_estimate_2 = got_estimate(lineTimeItem.bus2);
 		
-		// Time 1
-		graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+		graphics_context_set_text_color(ctx, GColorBlack);
 		
-		// Time 2
-		graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 21, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
-	} else if (got_estimate_1) {
-		
-		// Time 1
-		graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
-	} else if (got_estimate_2) {
-		
-		// Time 1
-		graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
-	} else {
-		
-		// No estimates
-		graphics_draw_text(ctx, "No estimates.", fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
+		// Line Number
+		graphics_draw_text(ctx, lineTimeItem.name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(2, 5, 30, 24), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+
+		if (got_estimate_1 && got_estimate_2) {
+
+			// Time 1
+			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+			// Time 2
+			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 21, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+		} else if (got_estimate_1) {
+
+			// Time 1
+			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+		} else if (got_estimate_2) {
+
+			// Time 1
+			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+		} else {
+
+			// No estimates
+			graphics_draw_text(ctx, "No estimates.", fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+		}
 	}
 	
+}
+
+static void time_row_selection_changed(struct MenuLayer *menu_layer,
+        MenuIndex new_index,
+        MenuIndex old_index,
+        void *callback_context){
+
+	layer_mark_dirty(menu_layer_get_layer(menu_layer));
+
+	times_row_actual = new_index.row;
 }
 
 static void loadStopDetail(char *number) {
@@ -175,6 +202,7 @@ static void bus_stop_detail_window_load(Window *window) {
 		.get_cell_height = menu_get_cell_height_callback,
 		.get_num_rows = menu_get_num_rows_callback,
 		.draw_row = menu_draw_row_callback,
+		.selection_changed = time_row_selection_changed,
 	});
 	
 	menu_layer_set_click_config_onto_window(ui.menu_layer, ui.window);

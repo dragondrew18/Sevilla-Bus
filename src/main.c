@@ -1,16 +1,12 @@
 #include <pebble.h>
 #include "bus_stop_detail.h"
 #include "favorites_bus_stop.h"
-#include "old_bus_stop_list.h"
 #include "bus_stop_number_select.h"
-#include "old_menu.h"
 
 static void init(void) {
 
 	favorites_bus_stop_init();
 
-	main_menu_init();
-	bus_stop_list_init();
 	bus_stop_detail_init();
 	win_edit_init();
 
@@ -20,8 +16,6 @@ static void init(void) {
 
 static void deinit(void) {
 	
-	main_menu_deinit();
-	bus_stop_list_deinit();
 	bus_stop_detail_deinit();
 
 	favorites_bus_stop_deinit();
