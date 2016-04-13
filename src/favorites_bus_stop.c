@@ -386,16 +386,16 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 		if(cell_index->row == bus_stop_row_actual){
 			// Bus Stop Lines
 			graphics_draw_text_vertically_center(ctx, act_bus_stop->lines, fonts_get_system_font(FONT_KEY_GOTHIC_18),
-					detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+					detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 		}else{
 			// Bus Stop Name
 			graphics_draw_text_vertically_center(ctx, act_bus_stop->name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
-					detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+					detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 		}
 
 		// Line Number
 		graphics_draw_text_vertically_center(ctx, act_bus_stop->number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
-				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
 	}
 
 }

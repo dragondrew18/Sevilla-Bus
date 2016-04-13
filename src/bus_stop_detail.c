@@ -123,11 +123,11 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 
 		// Bus Stop Name
 		graphics_draw_text_vertically_center(ctx, s_stop_detail.name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
-				detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+				detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 
 		// Line Number
 		graphics_draw_text_vertically_center(ctx, s_stop_detail.number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
-				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
 	}else{
 		LineTimesItem lineTimeItem = s_stop_detail.linesTimes[(cell_index->row) - 1];
 		
