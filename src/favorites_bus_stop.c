@@ -16,6 +16,7 @@ enum ListType {
 #define BUS_STOP_LINES_TEXT_LENGTH (20)
 #define VIEW_SYMBOL_PLUS_SIZE (25)
 #define VIEW_SYMBOL_LENS_RADIUS (9)
+#define WAIT_RESPONSE (1500)
 
 static struct BusStopListUi {
 	Window *window;
@@ -41,6 +42,7 @@ void bus_stop_show_favorites(); // Declaration
 static void show_loading_feedback(); // Declaration
 void bus_stop_show_favorites_return();
 
+static int load_In_Progress = -1;
 
 
 static BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
@@ -48,6 +50,9 @@ static BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];
 static int bus_stop_list_num_of_items = 0;
 static int bus_stop_list_active_item = -1;
 static int waiting_ready_attempts = 0;
+
+static AppTimer *timer_load_in_progress;
+static AppTimer *timer_execute_when_is_ready_true;
 
 static int test_iter = 0;
 
@@ -90,12 +95,12 @@ static void bus_stop_scroll_append(char *number, char *name, char *lines, int fa
 		return;
 	}
 	
-	if(listType == ListTypeNear){
+	if(load_In_Progress == ListTypeNear){
 		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].number, number);
 		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].name, name);
 		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].lines, lines);
 		bus_stop_list_near[bus_stop_list_num_of_items].favorite = favorite == 1;
-	}else{
+	}else if(load_In_Progress == ListTypeFavorites){
 		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].number, number);
 		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].name, name);
 		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].lines, lines);
@@ -129,6 +134,18 @@ static void bus_stop_scroll_out_failed_handler(DictionaryIterator *failed, AppMe
 	hide_feedback_layers(false);
 }
 
+static void nullable_load_in_progress(){
+	load_In_Progress = -1;
+}
+
+static void update_load_in_progress(){
+	if (timer_load_in_progress == NULL){
+		timer_load_in_progress = app_timer_register(WAIT_RESPONSE, nullable_load_in_progress, NULL);
+	}else{
+		app_timer_reschedule(timer_load_in_progress, WAIT_RESPONSE);
+	}
+}
+
 // When receive data do that
 static void bus_stop_scroll_in_received_handler(DictionaryIterator *iter, void *context) {
 	
@@ -158,14 +175,14 @@ static void bus_stop_scroll_in_received_handler(DictionaryIterator *iter, void *
 		} else {
 			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
 		}
-		
+		load_In_Progress = -1;
 	} else if (append_stop_tuple) {
+		update_load_in_progress();
 		bus_stop_scroll_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
 	}
 	// menu_layer_reload_data(ui.bus_stop_menu_layer);
 
 }
-
 
 static void bus_stop_scroll_in_dropped_handler(AppMessageResult reason, void *context) {
 	// incoming message dropped
@@ -195,7 +212,6 @@ static void loadFavoritesStops(void) {
 	}
 }
 
-
 static void loadNearStops(void) {
 	
 	DictionaryIterator *iter;
@@ -209,17 +225,24 @@ static void loadNearStops(void) {
 	app_message_outbox_send();
 }
 
-static void execute_when_is_ready_true(void *none){
-	if(get_JS_is_ready()){
+static void execute_when_is_ready_true(){
+	if(get_JS_is_ready() && load_In_Progress < 0){
+		timer_execute_when_is_ready_true = NULL;
 		if(listType == ListTypeNear){
+			load_In_Progress = ListTypeNear;
 			loadNearStops();
 		}else{
+			load_In_Progress = ListTypeFavorites;
 			loadFavoritesStops();
 		}
 	}else{
 		waiting_ready_attempts++;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms(nº%d)...", (int) 400, waiting_ready_attempts);
-		app_timer_register(400, execute_when_is_ready_true, NULL);
+		if (timer_execute_when_is_ready_true == NULL){
+			timer_execute_when_is_ready_true = app_timer_register(550, execute_when_is_ready_true, NULL);
+		}else{
+			app_timer_reschedule(timer_execute_when_is_ready_true, 550);
+		}
+		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms(nº%d)...", (int) 550, waiting_ready_attempts);
 	}
 }
 
@@ -345,7 +368,7 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 	}
 
 	graphics_context_set_text_color(ctx, GColorBlack);
-	GRect detail_rect = GRect(43, 0, 99, 42);
+	GRect detail_rect = GRect(48, 0, 93, 42);
 	GRect bus_stop_rect = GRect(2, 0, 45, 42);
 
 	// Layer *window_layer = window_get_root_layer(ui.window);
@@ -353,8 +376,13 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 
 
 	if(cell_index->row == 0){
-		graphics_context_set_stroke_color(ctx,GColorBlack);
-//		graphics_context_set_stroke_width(ctx,2);
+		if(menu_cell_layer_is_highlighted(cell_layer))
+			graphics_context_set_stroke_color(ctx,PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+		else
+			graphics_context_set_stroke_color(ctx,PBL_IF_COLOR_ELSE(GColorBlue, GColorBlack));
+		graphics_context_set_stroke_width(ctx,2);
+
+		// GColorVividCerulean
 
 		int center_x = (detail_rect.size.w + detail_rect.origin.x) / 2;
 		int center_y = (detail_rect.size.h + detail_rect.origin.y) / 2;
@@ -388,14 +416,38 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 			graphics_draw_text_vertically_center(ctx, act_bus_stop->lines, fonts_get_system_font(FONT_KEY_GOTHIC_18),
 					detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 		}else{
+//			GSize size = graphics_text_layout_get_content_size(text, font, box,
+//						overflow_mode, alignment);
+//			GRect box_2 = box;
+//			box_2.origin.y = (box.size.h - size.h)/2 + box.origin.y - 2;
+//
+//			graphics_draw_text(ctx, text, font, box_2, overflow_mode, alignment, NULL);
 			// Bus Stop Name
 			graphics_draw_text_vertically_center(ctx, act_bus_stop->name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
 					detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 		}
 
 		// Line Number
+
+		GRect rect2 = bus_stop_rect;
+		if(act_bus_stop->favorite == true){
+			rect2.origin.y += rect2.size.h/8;
+
+			rect2.size.h -= rect2.size.h/4;
+			if(menu_cell_layer_is_highlighted(cell_layer)){
+				graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorBlack));
+				graphics_context_set_fill_color(ctx, GColorWhite);
+			}else{
+				graphics_context_set_text_color(ctx, GColorWhite);
+				graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorFolly, GColorBlack));
+			}
+			graphics_fill_rect(ctx, rect2, 4, GCornersAll);
+		}
+
 		graphics_draw_text_vertically_center(ctx, act_bus_stop->number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
 				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
+
+		//draw_layout_border(ctx, bus_stop_rect, 1, 2, GColorFashionMagenta);
 	}
 
 }
@@ -455,7 +507,10 @@ static void bus_stop_window_load(Window *window) {
 		.select_click = select2_click_handler,
 		.select_long_click= select2_long_click_handler,
 	});
-
+	#ifdef PBL_COLOR
+		menu_layer_pad_bottom_enable(ui.bus_stop_menu_layer,false);
+		menu_layer_set_highlight_colors(ui.bus_stop_menu_layer,GColorVividCerulean,GColorWhite);
+	#endif
 	layer_add_child(window_layer, menu_layer_get_layer(ui.bus_stop_menu_layer));
 
 	menu_layer_set_click_config_onto_window(ui.bus_stop_menu_layer, ui.window);
@@ -478,10 +533,8 @@ static void bus_stop_window_load(Window *window) {
 		waiting_ready_attempts++;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms...", (int) ms);
 		app_timer_register(ms, execute_when_is_ready_true, NULL);
-	}else if (listType == ListTypeNear) {
-		loadNearStops();
-	} else {
-		loadFavoritesStops();
+	}else {
+		execute_when_is_ready_true();
 	}
 
 	//force_back_button(ui.window, ui.bus_stop_menu_layer);
@@ -511,7 +564,7 @@ static void bus_stop_window_appear(Window *window) {
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
 	if(listType == ListTypeNear){
 		show_loading_feedback();
-		loadNearStops();
+		execute_when_is_ready_true();
 	}
 }
 
@@ -554,7 +607,7 @@ void bus_stop_show_favorites_return(void) {
 	listType = ListTypeFavorites;
 	register_app_message_callbacks();
 	show_loading_feedback();
-	loadFavoritesStops();
+	execute_when_is_ready_true();
 
 	clean_menu();
 	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
@@ -584,7 +637,7 @@ void favorites_bus_stop_deinit(void) {
 void bus_stop_show_near_seg(void) {
 	listType = ListTypeNear;
 	show_loading_feedback();
-	loadNearStops();
+	execute_when_is_ready_true();
 	clean_menu();
 	load_view_for_bus_stops_type(ListTypeNear);
 

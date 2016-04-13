@@ -17,9 +17,28 @@ void graphics_draw_text_vertically_center(GContext* ctx,
 	GSize size = graphics_text_layout_get_content_size(text, font, box,
 				overflow_mode, alignment);
 	GRect box_2 = box;
-	box_2.origin.y = (box.size.h - size.h)/2 + box.origin.y - 2;
+	box_2.origin.y += (box.size.h - size.h)/2 - 3;
 
 	graphics_draw_text(ctx, text, font, box_2, overflow_mode, alignment, NULL);
+
+}
+
+void draw_layout_border (GContext *ctx, GRect zoneToBorder, int strokeWidth, int difference, GColor color){
+	graphics_context_set_stroke_color(ctx, color);
+
+//	a-----b
+//	|     |
+//	c-----d
+
+	GPoint a = GPoint(zoneToBorder.origin.x + difference, zoneToBorder.origin.y + difference);
+	GPoint b = GPoint(zoneToBorder.origin.x + zoneToBorder.size.w - difference, zoneToBorder.origin.y + difference);
+	GPoint c = GPoint(zoneToBorder.origin.x + difference, zoneToBorder.origin.y + zoneToBorder.size.h - difference);
+	GPoint d = GPoint(zoneToBorder.origin.x + zoneToBorder.size.w - difference, zoneToBorder.origin.y + zoneToBorder.size.h - difference);
+
+	graphics_draw_line(ctx, a, b);
+	graphics_draw_line(ctx, c, d);
+	graphics_draw_line(ctx, a, c);
+	graphics_draw_line(ctx, b, d);
 
 }
 

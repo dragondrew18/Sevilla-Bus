@@ -99,9 +99,10 @@ static void update_ui(Layer *layer, GContext *ctx) {
 //				(i == s_selection) ?
 //						PBL_IF_COLOR_ELSE(GColorBlue, GColorBlack) :
 //						PBL_IF_COLOR_ELSE(GColorDarkGray, GColorLightGray));
-		text_layer_set_background_color(ui.s_input_layers[i],GColorBlack);
+		text_layer_set_background_color(ui.s_input_layers[i],PBL_IF_COLOR_ELSE(GColorDarkGray, GColorLightGray));
 		text_layer_set_text_color(ui.s_input_layers[i],GColorWhite);
 		if(i==s_selection){
+			text_layer_set_background_color(ui.s_input_layers[i],PBL_IF_COLOR_ELSE(GColorBlue, GColorBlack));
 			GPoint selection_center = {
 					.x = (int16_t) i * (NUMBER_WIDTH + space_number_width) + OFFSET_LEFT + space_number_width/2 + NUMBER_WIDTH/2,
 					.y = (int16_t) 60 + OFFSET_TOP - 2 * space_number_width,

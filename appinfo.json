@@ -31,7 +31,7 @@
   "companyName": "Alvaro Murillo",
   "watchapp": {
     "watchface": false,
-    "hiddenApp": true
+    "hiddenApp": false
   },
   "targetPlatforms": [
     "aplite",

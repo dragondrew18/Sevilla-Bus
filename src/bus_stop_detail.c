@@ -204,7 +204,10 @@ static void bus_stop_detail_window_load(Window *window) {
 		.draw_row = menu_draw_row_callback,
 		.selection_changed = time_row_selection_changed,
 	});
-	
+#ifdef PBL_COLOR
+	menu_layer_pad_bottom_enable(ui.menu_layer,false);
+	menu_layer_set_highlight_colors(ui.menu_layer,GColorVividCerulean,GColorWhite);
+#endif
 	menu_layer_set_click_config_onto_window(ui.menu_layer, ui.window);
 	layer_add_child(window_layer, menu_layer_get_layer(ui.menu_layer));
 	

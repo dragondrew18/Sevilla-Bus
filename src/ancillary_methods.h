@@ -11,3 +11,4 @@ AppMessageResult ancillary_app_message_outbox_begin(
 
 AppMessageResult ancillary_app_message_outbox_send(void);
 
+void draw_layout_border (GContext *ctx, GRect zoneToBorder, int strokeWidth, int difference, GColor color);
