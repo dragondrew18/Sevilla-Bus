@@ -14,7 +14,7 @@ enum ListType {
 #define BUS_STOP_NUMBER_TEXT_LENGTH (6)
 #define BUS_STOP_LINES_TEXT_LENGTH (20)
 #define VIEW_SYMBOL_PLUS_SIZE (25)
-#define VIEW_SYMBOL_LENS_RADIUS (8)
+#define VIEW_SYMBOL_LENS_RADIUS (9)
 
 static struct BusStopListUi {
 	Window *window;
@@ -33,18 +33,38 @@ typedef struct {
 
 static uint16_t bus_stop_row_actual;
 
-static enum ListType listType;
+static enum ListType listType = ListTypeFavorites;
 
 static BusStopListItem bus_stop_list_items[BUS_STOP_LIST_MAX_ITEMS];
+static BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
+static BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];
 static int bus_stop_list_num_of_items = 0;
 static int bus_stop_list_active_item = -1;
 static int waiting_ready_attempts = 0;
+
+static int test_iter = 0;
 
 static BusStopListItem* get_bus_stop_scroll_item_at_index(int index) {
 	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
 		return NULL;
 	} else {
 		return &bus_stop_list_items[index];
+	}
+}
+
+static BusStopListItem* get_bus_stop_list_favorites_at_index(int index) {
+	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
+		return NULL;
+	} else {
+		return &bus_stop_list_favorites[index];
+	}
+}
+
+static BusStopListItem* get_bus_stop_list_near_at_index(int index) {
+	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
+		return NULL;
+	} else {
+		return &bus_stop_list_near[index];
 	}
 }
 
@@ -70,6 +90,21 @@ static void bus_stop_scroll_append(char *number, char *name, char *lines, int fa
 	bus_stop_list_items[bus_stop_list_num_of_items].favorite = favorite == 1;
 	bus_stop_list_num_of_items++;
 	
+	if(listType == ListTypeNear){
+		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].number, number);
+		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].name, name);
+		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].lines, lines);
+		bus_stop_list_near[bus_stop_list_num_of_items].favorite = favorite == 1;
+	}else{
+		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].number, number);
+		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].name, name);
+		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].lines, lines);
+		bus_stop_list_favorites[bus_stop_list_num_of_items].favorite = favorite == 1;
+	}
+	if(listType == ListTypeNear && bus_stop_list_num_of_items == 1){
+		vibes_short_pulse();
+	}
+
 	hide_feedback_layers(true);
 	hide_bus_stop_detail_layers(false);
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
@@ -181,8 +216,8 @@ static void execute_when_is_ready_true(void *none){
 		}
 	}else{
 		waiting_ready_attempts++;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms(nº%d)...", (int) 200, waiting_ready_attempts);
-		app_timer_register(200, execute_when_is_ready_true, NULL);
+		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms(nº%d)...", (int) 400, waiting_ready_attempts);
+		app_timer_register(400, execute_when_is_ready_true, NULL);
 	}
 }
 
@@ -263,8 +298,18 @@ static int16_t menu2_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_ind
 
 static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
 
-	BusStopListItem *act_bus_stop = get_bus_stop_scroll_item_at_index(cell_index->row);
+	BusStopListItem *act_bus_stop;
 
+	if(listType == ListTypeNear){
+		act_bus_stop = get_bus_stop_list_near_at_index(cell_index->row);
+	}else{
+		act_bus_stop = get_bus_stop_list_favorites_at_index(cell_index->row);
+	}
+	/*
+	BusStopListItem *act_bus_stop = get_bus_stop_scroll_item_at_index(cell_index->row);
+	BusStopListItem *act_bus_stop_favorites = get_bus_stop_list_favorites_at_index(cell_index->row);
+	BusStopListItem *act_bus_stop_near = get_bus_stop_list_near_at_index(cell_index->row);
+*/
 
 
 	graphics_context_set_text_color(ctx, GColorBlack);
@@ -394,7 +439,7 @@ static void bus_stop_window_load(Window *window) {
 	show_loading_feedback();
 
 	if(!get_JS_is_ready()){
-		int ms = 500;
+		int ms = 800;
 		waiting_ready_attempts++;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms...", (int) ms);
 		app_timer_register(ms, execute_when_is_ready_true, NULL);
@@ -420,6 +465,17 @@ static void bus_stop_window_unload(Window *window) {
 
 static void bus_stop_window_appear(Window *window) {
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "bus_stop_window_appear");
+	test_iter++;
+	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "This windows appear... %d times", test_iter);
+
+}
+
+static void bus_stop_window_disappear(Window *window) {
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "bus_stop_window_disappear");
+	test_iter++;
+	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "This windows disappear... %d times", test_iter);
+
+	listType = ListTypeFavorites;
 
 }
 
@@ -444,11 +500,6 @@ void bus_stop_show_favorites(void) {
 	load_view_for_bus_stops_type(ListTypeFavorites);
 }
 
-void bus_stop_show_near(void) {
-	
-	load_view_for_bus_stops_type(ListTypeNear);
-}
-
 void favorites_bus_stop_init(void) {
 	
 	ui.window = window_create();
@@ -457,7 +508,8 @@ void favorites_bus_stop_init(void) {
 	window_set_window_handlers(ui.window, (WindowHandlers) {
 		.load = bus_stop_window_load,
 		.unload = bus_stop_window_unload,
-		.appear = bus_stop_window_appear
+		.appear = bus_stop_window_appear,
+		.disappear = bus_stop_window_disappear
 	});
 	bus_stop_show_favorites();
 	// window_stack_push(ui.window, true /* Animated */);
@@ -465,5 +517,18 @@ void favorites_bus_stop_init(void) {
 
 void favorites_bus_stop_deinit(void) {
 	window_destroy(ui.window);
+
+}
+
+
+void bus_stop_show_near(void) {
+	//bus_stop_window_unload(ui.window);
+	//favorites_bus_stop_deinit();
+	listType = ListTypeNear;
+	//favorites_bus_stop_init();
+	loadNearStops();
+	load_view_for_bus_stops_type(ListTypeNear);
+	menu_layer_reload_data(ui.bus_stop_menu_layer);
+	//loadNearStops();
 
 }

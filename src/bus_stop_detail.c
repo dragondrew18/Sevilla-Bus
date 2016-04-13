@@ -28,6 +28,18 @@ typedef struct {
 
 static StopDetailItem s_stop_detail;
 
+
+void set_bus_stop_list_hidden(bool hidden) {
+
+	layer_set_hidden(menu_layer_get_layer(ui.menu_layer), hidden);
+}
+
+void set_feedback_message_hidden(bool hidden) {
+
+	layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), hidden);
+}
+
+
 static void line_list_append(char *name, char *bus1, char *bus2) {
 	
 	if (s_stop_detail.number_of_lines == BUS_STOP_DETAIL_LINES_MAX_ITEMS) {
@@ -38,17 +50,8 @@ static void line_list_append(char *name, char *bus1, char *bus2) {
 	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus1, bus1);
 	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus2, bus2);
 	s_stop_detail.number_of_lines++;
-	
-}
 
-void set_bus_stop_list_hidden(bool hidden) {
-	
-	layer_set_hidden(menu_layer_get_layer(ui.menu_layer), hidden);
-}
 
-void set_feedback_message_hidden(bool hidden) {
-	
-	layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), hidden);
 }
 
 void bus_stop_detail_out_sent_handler(DictionaryIterator *sent, void *context) {
@@ -75,8 +78,7 @@ void bus_stop_detail_in_received_handler(DictionaryIterator *iter, void *context
 		
 	if (append_line_tuple) {
 		
-		layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), true);
-		
+		set_feedback_message_hidden(true);
 		if (append_line_tuple->value->uint8 == 0) {
 			s_stop_detail.number_of_lines = 0;
 		}
@@ -193,6 +195,7 @@ static void bus_stop_detail_window_load(Window *window) {
 // Deinitialize resources on window unload that were initialized on window load
 void bus_stop_detail_window_unload(Window *window) {
 	menu_layer_destroy(ui.menu_layer);
+	text_layer_destroy(ui.feedback_text_layer); // Originally not exist. After put that the aplication close going back
 	s_stop_detail.number_of_lines = 0;
 }
 

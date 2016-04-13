@@ -1,10 +1,11 @@
 #include <pebble.h>
 #include "favorites_bus_stop.h"
 #include "old_bus_stop_list.h"
+#include "bus_stop_number_select.h"
 
 
 #define MAIN_MENU_SECTIONS 1
-#define MAIN_MENU_ITEMS 3
+#define MAIN_MENU_ITEMS 5
 
 static struct MainMenuUi {
 	Window *window;
@@ -28,6 +29,16 @@ static void menu_select_new_favorites_stops_callback(int index, void *ctx) {
 	bus_stop_show_favorites();
 }
 
+static void menu_select_new_near_stops_callback(int index, void *ctx) {
+
+	bus_stop_show_near();
+}
+
+static void menu_select_new_select_number_stops_callback(int index, void *ctx) {
+
+	win_edit_show();
+}
+
 // This initializes the menu upon window load
 static void window_load(Window *window) {
 	
@@ -42,10 +53,17 @@ static void window_load(Window *window) {
 		.title = "Favorite Stops",
 		.callback = menu_select_push_favorites_stops_callback,
 	};
-        
-        ui.main_menu_first_section_items[2] = (SimpleMenuItem){
+	ui.main_menu_first_section_items[2] = (SimpleMenuItem){
 		.title = "Favorite Stops_2",
 		.callback = menu_select_new_favorites_stops_callback,
+	};
+	ui.main_menu_first_section_items[3] = (SimpleMenuItem){
+		.title = "Nearby Stops_2",
+		.callback = menu_select_new_near_stops_callback,
+	};
+	ui.main_menu_first_section_items[3] = (SimpleMenuItem){
+		.title = "Select by Number",
+		.callback = menu_select_new_select_number_stops_callback,
 	};
 	
 	// Bind the menu items to the corresponding menu sections
