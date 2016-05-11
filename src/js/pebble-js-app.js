@@ -8549,6 +8549,13 @@ function getNodosCercanos(position) {
 
 function locationError(err) {
 }
+Pebble.addEventListener('ready', function() {
+	console.log('PebbleKit JS ready.');
+
+	// Update s_js_ready on watch
+	Pebble.sendAppMessage({'AppKeyJSReady': 1});
+});
+
 
 var locationOptions = { "timeout": 15000, "maximumAge": 60000 }; 
 
@@ -8576,12 +8583,6 @@ Pebble.addEventListener("appmessage", function(e) {
 		getTiempoNodo(e.payload["fetchStopDetail"]);
 	}
 
-});
-Pebble.addEventListener('ready', function() {
-  console.log('PebbleKit JS ready.');
-
-  // Update s_js_ready on watch
-  Pebble.sendAppMessage({'AppKeyJSReady': 1});
 });
 
 },{"xml2js":17}]},{},[37])

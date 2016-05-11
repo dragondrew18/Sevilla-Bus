@@ -232,10 +232,10 @@ void bus_stop_detail_window_unload(Window *window) {
 
 void bus_stop_detail_window_appear(Window *window) {
 	
-	app_message_register_inbox_received(bus_stop_detail_in_received_handler);
-	app_message_register_inbox_dropped(bus_stop_detail_in_dropped_handler);
-	app_message_register_outbox_sent(bus_stop_detail_out_sent_handler);
-	app_message_register_outbox_failed(bus_stop_detail_out_failed_handler);
+//	app_message_register_inbox_received(bus_stop_detail_in_received_handler);
+//	app_message_register_inbox_dropped(bus_stop_detail_in_dropped_handler);
+//	app_message_register_outbox_sent(bus_stop_detail_out_sent_handler);
+//	app_message_register_outbox_failed(bus_stop_detail_out_failed_handler);
 	
 }
 

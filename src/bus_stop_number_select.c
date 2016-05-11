@@ -2,6 +2,8 @@
 #include "keys.h"
 #include "bus_stop_detail.h"
 #include "favorites_bus_stop.h"
+#include "ancillary_methods.h"
+
 
 static void time_window_load(Window* window);
 static void time_window_unload(Window* window);

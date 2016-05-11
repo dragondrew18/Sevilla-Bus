@@ -11,4 +11,16 @@ AppMessageResult ancillary_app_message_outbox_begin(
 
 AppMessageResult ancillary_app_message_outbox_send(void);
 
-void draw_layout_border (GContext *ctx, GRect zoneToBorder, int strokeWidth, int difference, GColor color);
+bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8_t value);
+
+void response_received(void);
+
+void test_received_handler(DictionaryIterator *iter, void *context);
+
+void ancillary_init(void);
+
+void ancillary_message_context();
+
+int get_load_in_progress(void);
+
+void set_load_in_progress(int type);

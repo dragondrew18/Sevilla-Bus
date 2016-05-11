@@ -48,23 +48,8 @@
       },
       {
         "type": "png",
-        "name": "IMAGE_ACTION_BAR_UP",
-        "file": "img/up.png"
-      },
-      {
-        "type": "png",
-        "name": "IMAGE_ACTION_BAR_DOWN",
-        "file": "img/down.png"
-      },
-      {
-        "type": "png",
         "name": "IMAGE_ACTION_BAR_CLOCK",
         "file": "img/clock.png"
-      },
-      {
-        "type": "png",
-        "name": "IMAGE_FAVORITE",
-        "file": "img/favorite.png"
       }
     ]
   }

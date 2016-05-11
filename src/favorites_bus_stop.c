@@ -3,80 +3,36 @@
 #include "bus_stop_number_select.h"
 #include "ancillary_methods.h"
 #include "keys.h"
-//#include "old_menu.h"
+#include "data.h"
 
-enum ListType {
-	ListTypeFavorites,
-	ListTypeNear,
-};
-
-#define BUS_STOP_LIST_MAX_ITEMS (20)
-#define BUS_STOP_NAME_TEXT_LENGTH (60)
-#define BUS_STOP_NUMBER_TEXT_LENGTH (6)
-#define BUS_STOP_LINES_TEXT_LENGTH (20)
 #define VIEW_SYMBOL_PLUS_SIZE (25)
 #define VIEW_SYMBOL_LENS_RADIUS (9)
 #define WAIT_RESPONSE (1500)
 
 static struct BusStopListUi {
 	Window *window;
-	
 	TextLayer *feedback_text_layer;
-	
 	MenuLayer *bus_stop_menu_layer;
 } ui;
 
-typedef struct {
-	char number[BUS_STOP_NUMBER_TEXT_LENGTH];
-	char name[BUS_STOP_NAME_TEXT_LENGTH];
-	char lines[BUS_STOP_LINES_TEXT_LENGTH];
-	bool favorite;
-} BusStopListItem;
-
 static uint16_t bus_stop_row_actual;
-
-static enum ListType listType = ListTypeFavorites;
 
 void bus_stop_show_near(); // Declaration
 void bus_stop_show_favorites(); // Declaration
 static void show_loading_feedback(); // Declaration
 void bus_stop_show_favorites_return();
 
-static int load_In_Progress = -1;
+//static int load_In_Progress = -1;
 
-
-static BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
-static BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];
-static int bus_stop_list_num_of_items = 0;
-static int bus_stop_list_active_item = -1;
-static int waiting_ready_attempts = 0;
-
-static AppTimer *timer_load_in_progress;
-static AppTimer *timer_execute_when_is_ready_true;
+// static int bus_stop_list_num_of_items = 0;
+// static int bus_stop_list_active_item = -1;
 
 static int test_iter = 0;
 
 ClickConfigProvider previous_ccp;
 
-
-static BusStopListItem* get_bus_stop_list_favorites_at_index(int index) {
-	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
-		return NULL;
-	} else {
-		return &bus_stop_list_favorites[index];
-	}
-}
-
-static BusStopListItem* get_bus_stop_list_near_at_index(int index) {
-	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
-		return NULL;
-	} else {
-		return &bus_stop_list_near[index];
-	}
-}
-
 void set_list_type_to_near(void *context) {
-	listType = ListTypeNear;
+	set_actual_view(Near);
 }
 
 static void hide_bus_stop_detail_layers(bool hide) {
@@ -89,162 +45,162 @@ static void hide_feedback_layers(bool hide) {
 	layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), hide);
 }
 
-static void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite) {
-	
-	if (bus_stop_list_num_of_items == BUS_STOP_LIST_MAX_ITEMS) {
-		return;
-	}
-	
-	if(load_In_Progress == ListTypeNear){
-		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].number, number);
-		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].name, name);
-		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].lines, lines);
-		bus_stop_list_near[bus_stop_list_num_of_items].favorite = favorite == 1;
-	}else if(load_In_Progress == ListTypeFavorites){
-		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].number, number);
-		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].name, name);
-		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].lines, lines);
-		bus_stop_list_favorites[bus_stop_list_num_of_items].favorite = favorite == 1;
-	}
-	bus_stop_list_num_of_items++;
+//static void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite) {
+//
+//	if (bus_stop_list_num_of_items == BUS_STOP_LIST_MAX_ITEMS) {
+//		return;
+//	}
+//
+//	if(load_In_Progress == Near){
+//		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].number, number);
+//		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].name, name);
+//		strcpy(bus_stop_list_near[bus_stop_list_num_of_items].lines, lines);
+//		bus_stop_list_near[bus_stop_list_num_of_items].favorite = favorite == 1;
+//	}else if(load_In_Progress == Favorites){
+//		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].number, number);
+//		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].name, name);
+//		strcpy(bus_stop_list_favorites[bus_stop_list_num_of_items].lines, lines);
+//		bus_stop_list_favorites[bus_stop_list_num_of_items].favorite = favorite == 1;
+//	}
+//	bus_stop_list_num_of_items++;
+//
+//	if(listType == Near && bus_stop_list_num_of_items == 1){
+//		vibes_short_pulse();
+//	}
+//
+//	hide_feedback_layers(true);
+//	hide_bus_stop_detail_layers(false);
+//	menu_layer_reload_data(ui.bus_stop_menu_layer);
+//}
 
-	if(listType == ListTypeNear && bus_stop_list_num_of_items == 1){
-		vibes_short_pulse();
-	}
+//static void bus_stop_scroll_out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
+//	// outgoing message failed
+//
+//	text_layer_set_text(ui.feedback_text_layer, "Connection error.");
+////	hide_bus_stop_detail_layers(true);
+//	hide_bus_stop_detail_layers(false);
+//	hide_feedback_layers(false);
+//}
 
-	hide_feedback_layers(true);
-	hide_bus_stop_detail_layers(false);
-	menu_layer_reload_data(ui.bus_stop_menu_layer);
-}
+//static void nullable_load_in_progress(){
+//	load_In_Progress = -1;
+//}
 
-static void bus_stop_scroll_out_sent_handler(DictionaryIterator *sent, void *context) {
-	// outgoing message was delivered
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "out_sent_handler");
-	// menu_layer_reload_data(ui.bus_stop_menu_layer);
-	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
-}
-
-
-static void bus_stop_scroll_out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
-	// outgoing message failed
-	
-	text_layer_set_text(ui.feedback_text_layer, "Connection error.");
-//	hide_bus_stop_detail_layers(true);
-	hide_bus_stop_detail_layers(false);
-	hide_feedback_layers(false);
-}
-
-static void nullable_load_in_progress(){
-	load_In_Progress = -1;
-}
-
-static void update_load_in_progress(){
-	if (timer_load_in_progress == NULL){
-		timer_load_in_progress = app_timer_register(WAIT_RESPONSE, nullable_load_in_progress, NULL);
-	}else{
-		app_timer_reschedule(timer_load_in_progress, WAIT_RESPONSE);
-	}
-}
+//static void update_load_in_progress(){
+//	if (timer_load_in_progress == NULL){
+//		timer_load_in_progress = app_timer_register(WAIT_RESPONSE, nullable_load_in_progress, NULL);
+//	}else{
+//		app_timer_reschedule(timer_load_in_progress, WAIT_RESPONSE);
+//	}
+//}
 
 // When receive data do that
-static void bus_stop_scroll_in_received_handler(DictionaryIterator *iter, void *context) {
-	
-	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "data received !");
+//static void bus_stop_scroll_in_received_handler(DictionaryIterator *iter, void *context) {
+//
+//	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "data received !");
+//
+//	Tuple *append_stop_tuple = dict_find(iter, TUSSAM_KEY_APPEND_STOP);
+//	Tuple *stop_number_tuple = dict_find(iter, TUSSAM_KEY_STOP_NUMBER);
+//	Tuple *stop_name_tuple = dict_find(iter, TUSSAM_KEY_STOP_NAME);
+//	Tuple *stop_lines_tuple = dict_find(iter, TUSSAM_KEY_STOP_LINES);
+//	Tuple *stop_favorite = dict_find(iter, TUSSAM_KEY_STOP_FAVORITE);
+//	Tuple *no_bus_stops = dict_find(iter, TUSSAM_KEY_NO_BUS_STOPS);
+//	Tuple *ready_tuple = dict_find(iter, AppKeyJSReady);
+//
+//	if (ready_tuple){
+//		APP_LOG(APP_LOG_LEVEL_INFO, "Ready tuple received");
+//		set_JS_is_ready(true);
+//		response_received();
+//		return;
+//	}
+//
+//	if (no_bus_stops) {
+//
+//		// hide_bus_stop_detail_layers(true);
+//		hide_feedback_layers(false);
+//
+//		if (get_actual_view() == Favorites) {
+//			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\n Search it !.");
+////			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\nLong press in times button to add/remove favorites.");
+//		} else {
+//			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
+//		}
+//		load_In_Progress = -1;
+//	} else if (append_stop_tuple) {
+//		// update_load_in_progress();
+//		bus_stop_scroll_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
+//	}
+//	// menu_layer_reload_data(ui.bus_stop_menu_layer);
+//	response_received();
+//
+//}
 
-	Tuple *append_stop_tuple = dict_find(iter, TUSSAM_KEY_APPEND_STOP);
-	Tuple *stop_number_tuple = dict_find(iter, TUSSAM_KEY_STOP_NUMBER);
-	Tuple *stop_name_tuple = dict_find(iter, TUSSAM_KEY_STOP_NAME);
-	Tuple *stop_lines_tuple = dict_find(iter, TUSSAM_KEY_STOP_LINES);
-	Tuple *stop_favorite = dict_find(iter, TUSSAM_KEY_STOP_FAVORITE);
-	Tuple *no_bus_stops = dict_find(iter, TUSSAM_KEY_NO_BUS_STOPS);
-	Tuple *ready_tuple = dict_find(iter, AppKeyJSReady);
+void reload_menu(void){
+	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+	menu_layer_reload_data(ui.bus_stop_menu_layer);
 
-	if (ready_tuple){
-		set_JS_is_ready(true);
-		return;
-	}
-	
-	if (no_bus_stops) {
-				
-		// hide_bus_stop_detail_layers(true);
-		hide_feedback_layers(false);
-
-		if (listType == ListTypeFavorites) {
-			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\n Search it !.");
-//			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\nLong press in times button to add/remove favorites.");
-		} else {
-			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
-		}
-		load_In_Progress = -1;
-	} else if (append_stop_tuple) {
-		update_load_in_progress();
-		bus_stop_scroll_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
-	}
-	// menu_layer_reload_data(ui.bus_stop_menu_layer);
-
+	hide_feedback_layers(true);
 }
 
-static void bus_stop_scroll_in_dropped_handler(AppMessageResult reason, void *context) {
-	// incoming message dropped
-	APP_LOG(APP_LOG_LEVEL_ERROR, "Error catching data. Reason: %d", (int) reason);
-}
+//static void loadFavoritesStops(void) {
+//
+//	DictionaryIterator *iter;
+//
+//	send_message(&iter, TUSSAM_KEY_FAVORITES,1);
+////	AppMessageResult res = app_message_outbox_begin(&iter);
+////
+////	if (res != APP_MSG_OK) {
+////		// Error establishing the connection
+////		APP_LOG(APP_LOG_LEVEL_ERROR, "Error establishing the connection: %d", (int)res);
+////	}
+////	if (dict_write_uint8(iter, TUSSAM_KEY_FAVORITES, 1) != DICT_OK) {
+////		// Error writing data petition
+////		return;
+////	}
+////	res = app_message_outbox_send();
+////	if(res != APP_MSG_OK ){
+////		APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the data: %d", (int)res);
+////		return;
+////	}else{
+////		APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent!");
+////	}
+//}
 
-static void loadFavoritesStops(void) {
-	
-	DictionaryIterator *iter;
-	
-	AppMessageResult res = app_message_outbox_begin(&iter);
+//static void loadNearStops(void) {
+//
+//	DictionaryIterator *iter;
+//
+//	send_message(&iter, TUSSAM_KEY_NEAR,1);
+//
+////	if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+////		return;
+////	}
+////	if (dict_write_uint8(iter, TUSSAM_KEY_NEAR, 1) != DICT_OK) {
+////		return;
+////	}
+////	app_message_outbox_send();
+//}
 
-	if (res != APP_MSG_OK) {
-		// Error establishing the connection
-		APP_LOG(APP_LOG_LEVEL_ERROR, "Error establishing the connection: %d", (int)res);
-	}
-	if (dict_write_uint8(iter, TUSSAM_KEY_FAVORITES, 1) != DICT_OK) {
-		// Error writing data petition
-		return;
-	}
-	res = app_message_outbox_send();
-	if(res != APP_MSG_OK ){
-		APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the data: %d", (int)res);
-		return;
-	}else{
-		APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent!");
-	}
-}
-
-static void loadNearStops(void) {
-	
-	DictionaryIterator *iter;
-	
-	if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
-		return;
-	}
-	if (dict_write_uint8(iter, TUSSAM_KEY_NEAR, 1) != DICT_OK) {
-		return;
-	}
-	app_message_outbox_send();
-}
-
-static void execute_when_is_ready_true(){
-	if(get_JS_is_ready() && load_In_Progress < 0){
-		timer_execute_when_is_ready_true = NULL;
-		if(listType == ListTypeNear){
-			load_In_Progress = ListTypeNear;
-			loadNearStops();
-		}else{
-			load_In_Progress = ListTypeFavorites;
-			loadFavoritesStops();
-		}
-	}else{
-		waiting_ready_attempts++;
-		if (timer_execute_when_is_ready_true == NULL){
-			timer_execute_when_is_ready_true = app_timer_register(550, execute_when_is_ready_true, NULL);
-		}else{
-			app_timer_reschedule(timer_execute_when_is_ready_true, 550);
-		}
-		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms(nº%d)...", (int) 550, waiting_ready_attempts);
-	}
-}
+//static void execute_when_is_ready_true(){
+//	if(get_JS_is_ready() && load_In_Progress < 0){
+//		timer_execute_when_is_ready_true = NULL;
+//		if(listType == Near){
+//			load_In_Progress = Near;
+//			loadNearStops();
+//		}else{
+//			load_In_Progress = Favorites;
+//			loadFavoritesStops();
+//		}
+//	}else{
+//		waiting_ready_attempts++;
+//		if (timer_execute_when_is_ready_true == NULL){
+//			timer_execute_when_is_ready_true = app_timer_register(550, execute_when_is_ready_true, NULL);
+//		}else{
+//			app_timer_reschedule(timer_execute_when_is_ready_true, 550);
+//		}
+//		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms(nº%d)...", (int) 550, waiting_ready_attempts);
+//	}
+//}
 
 static void clean_menu(){
 
@@ -254,9 +210,9 @@ static void add_remove_bus_stop_to_favorites() {
 	
 	uint32_t key;
 	BusStopListItem *stopListItem = NULL;
-	if(listType == ListTypeFavorites)
+	if(get_actual_view() == Favorites)
 		stopListItem = get_bus_stop_list_favorites_at_index(bus_stop_row_actual - 1);
-	else if (listType == ListTypeNear)
+	else if (get_actual_view() == Near)
 		stopListItem = get_bus_stop_list_near_at_index(bus_stop_row_actual - 1);
 	
 	if (stopListItem->favorite) {
@@ -289,16 +245,16 @@ static void select2_click_handler(struct MenuLayer *menu_layer,
 
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "select_click_handler");
 	if(bus_stop_row_actual == 0){
-		if(listType == ListTypeFavorites){
+		if(get_actual_view() == Favorites){
 			bus_stop_show_near();
-			bus_stop_list_num_of_items = 0;
-		}else if (listType == ListTypeNear)
+			//bus_stop_list_num_of_items = 0;
+		}else if (get_actual_view() == Near)
 			win_edit_show();
 	}else{
 		BusStopListItem *stopListItem = NULL;
-		if(listType == ListTypeFavorites)
+		if(get_actual_view() == Favorites)
 			stopListItem = get_bus_stop_list_favorites_at_index(bus_stop_row_actual - 1);
-		else if (listType == ListTypeNear)
+		else if (get_actual_view() == Near)
 			stopListItem = get_bus_stop_list_near_at_index(bus_stop_row_actual - 1);
 		bus_stop_detail_show(stopListItem->number, stopListItem->name);
 	}
@@ -325,11 +281,7 @@ static uint16_t menu2_get_num_sections_callback(MenuLayer *me, void *data) {
 }
 
 static uint16_t menu2_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
-	if(get_JS_is_ready()){
-		return bus_stop_list_num_of_items + 1;
-	}else{
-		return 1;
-	}
+		return get_bus_list_num_of_items() + 1;
 }
 
 static int16_t menu2_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_index, void *data) {
@@ -338,14 +290,14 @@ static int16_t menu2_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_ind
 
 static void click_back_action(ClickRecognizerRef recognizer, void *context) {
 
-	if(listType == ListTypeNear){
+	if(get_actual_view() == Near){
 		window_stack_pop(true);
-		listType = ListTypeFavorites;
-		show_loading_feedback();
-		clean_menu();
-		bus_stop_list_num_of_items = 0;
+		// set_actual_view(Favorites);
+		// show_loading_feedback();
+		// clean_menu();
+		// bus_stop_list_num_of_items = 0;
 
-		menu_layer_reload_data(ui.bus_stop_menu_layer);
+		// menu_layer_reload_data(ui.bus_stop_menu_layer);
 		bus_stop_show_favorites_return();
 	} else
 		window_stack_pop_all(true);
@@ -361,16 +313,20 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 
 	BusStopListItem *act_bus_stop;
 
-	if(listType == ListTypeNear){
+	if(get_actual_view() == Near){
 		act_bus_stop = get_bus_stop_list_near_at_index(cell_index->row);
 	}else{
 		act_bus_stop = get_bus_stop_list_favorites_at_index(cell_index->row);
 	}
 
 	graphics_context_set_text_color(ctx, GColorBlack);
+#ifdef PBL_RECT
 	GRect detail_rect = GRect(48, 0, 93, 42);
 	GRect bus_stop_rect = GRect(2, 0, 45, 42);
-
+#else
+	GRect detail_rect = GRect(48, 0, 128, 42);
+	GRect bus_stop_rect = GRect(2, 0, 45, 42);
+#endif
 	// Layer *window_layer = window_get_root_layer(ui.window);
 	// GRect bounds = layer_get_frame(window_layer);
 
@@ -387,7 +343,7 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 		int center_x = (detail_rect.size.w + detail_rect.origin.x) / 2;
 		int center_y = (detail_rect.size.h + detail_rect.origin.y) / 2;
 
-		if(listType == ListTypeNear){
+		if(get_actual_view() == Near){
 			graphics_draw_line(ctx,
 					GPoint(center_x, center_y - VIEW_SYMBOL_PLUS_SIZE/2),
 					GPoint(center_x, center_y + VIEW_SYMBOL_PLUS_SIZE/2));
@@ -406,7 +362,7 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 							center_y + dif_radius + VIEW_SYMBOL_LENS_RADIUS));
 		}
 	}else{
-		if(listType == ListTypeNear)
+		if(get_actual_view() == Near)
 			act_bus_stop = get_bus_stop_list_near_at_index(cell_index->row -1);
 		else
 			act_bus_stop = get_bus_stop_list_favorites_at_index(cell_index->row -1);
@@ -452,10 +408,25 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 
 }
 
+void update_loading_feedback_favorites(bool loaded){
+	if(loaded == true && get_bus_list_num_of_items() > 0){
+		hide_feedback_layers(true);
+	}else if(loaded == true && get_bus_list_num_of_items() < 1){
+		hide_feedback_layers(false);
+		if (get_actual_view() == Favorites) {
+			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\n Search it !.");
+		} else {
+			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
+		}
+	}else{
+		show_loading_feedback();
+	}
+}
+
 
 static void show_loading_feedback() {
 	
-	if (listType == ListTypeFavorites) {
+	if (get_actual_view() == Favorites) {
 		text_layer_set_text(ui.feedback_text_layer,"Loading favorite bus stops...");
 	} else {
 		text_layer_set_text(ui.feedback_text_layer,"Loading nearby bus stops...");
@@ -528,14 +499,23 @@ static void bus_stop_window_load(Window *window) {
 	layer_add_child(window_layer, text_layer_get_layer(ui.feedback_text_layer));
 	show_loading_feedback();
 
-	if(!get_JS_is_ready()){
-		int ms = 800;
-		waiting_ready_attempts++;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms...", (int) ms);
-		app_timer_register(ms, execute_when_is_ready_true, NULL);
-	}else {
-		execute_when_is_ready_true();
-	}
+//	if(!get_JS_is_ready()){
+//		int ms = 800;
+//		waiting_ready_attempts++;
+//		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms...", (int) ms);
+//		app_timer_register(ms, execute_when_is_ready_true, NULL);
+//	}else {
+		//execute_when_is_ready_true();
+
+//				if(get_actual_view() == Near){
+//					set_actual_view(Near);
+//					// loadNearStops();
+//				}else{
+//					set_actual_view(Favorites);
+//					// loadFavoritesStops();
+//				}
+
+//	}
 
 	//force_back_button(ui.window, ui.bus_stop_menu_layer);
 	previous_ccp = window_get_click_config_provider(ui.window);
@@ -551,21 +531,28 @@ static void bus_stop_window_unload(Window *window) {
 
 	text_layer_destroy(ui.feedback_text_layer);
 
-	bus_stop_list_num_of_items = 0;
-	bus_stop_list_active_item = -1;
+	// bus_stop_list_num_of_items = 0;
+	// bus_stop_list_active_item = -1;
 }
 
 static void bus_stop_window_appear(Window *window) {
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "bus_stop_window_appear");
 	test_iter++;
-	bus_stop_list_num_of_items = 0;
+	//bus_stop_list_num_of_items = 0;
 	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "This windows appear... %d times", test_iter);
 	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
-	if(listType == ListTypeNear){
-		show_loading_feedback();
-		execute_when_is_ready_true();
-	}
+//	if(get_actual_view() == Near){
+//		show_loading_feedback();
+////		execute_when_is_ready_true();
+////				if(get_actual_view() == Near){
+////					set_actual_view(Near);
+////					// loadNearStops();
+////				}else{
+////					set_actual_view(Favorites);
+////					// loadFavoritesStops();
+////				}
+//	}
 }
 
 static void bus_stop_window_disappear(Window *window) {
@@ -573,41 +560,40 @@ static void bus_stop_window_disappear(Window *window) {
 	test_iter++;
 	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "This windows disappear... %d times", test_iter);
 
-//	listType = ListTypeFavorites;
+//	listType = Favorites;
 	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
 }
 
-static void register_app_message_callbacks() {
-	
-	app_message_register_inbox_received(bus_stop_scroll_in_received_handler);
-	app_message_register_inbox_dropped(bus_stop_scroll_in_dropped_handler);
-	app_message_register_outbox_sent(bus_stop_scroll_out_sent_handler);
-	app_message_register_outbox_failed(bus_stop_scroll_out_failed_handler);
-
-}
-
 static void load_view_for_bus_stops_type(int _listType) {
 	
-	listType = _listType;
-	register_app_message_callbacks();
+	// listType = _listType;
+	set_actual_view(_listType);
+	// register_app_message_callbacks();
 
 	window_stack_push(ui.window, true /* Animated */);
 }
 
-void bus_stop_show_favorites(void) {
+void bus_stop_show_favorites(void) { // Usado para la primera carga
 	
-	load_view_for_bus_stops_type(ListTypeFavorites);
+	load_view_for_bus_stops_type(Favorites);
 }
 
 void bus_stop_show_favorites_return(void) {
 
-	//load_view_for_bus_stops_type(ListTypeFavorites);
+	//load_view_for_bus_stops_type(Favorites);
 
-	listType = ListTypeFavorites;
-	register_app_message_callbacks();
-	show_loading_feedback();
-	execute_when_is_ready_true();
+	set_actual_view(Favorites);
+//	register_app_message_callbacks();
+//	show_loading_feedback();
+//	execute_when_is_ready_true();
+//			if(get_actual_view() == Near){
+//				set_actual_view(Near);
+//				// loadNearStops();
+//			}else{
+//				set_actual_view(Favorites);
+//				// loadFavoritesStops();
+//			}
 
 	clean_menu();
 	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
@@ -635,11 +621,18 @@ void favorites_bus_stop_deinit(void) {
 }
 
 void bus_stop_show_near_seg(void) {
-	listType = ListTypeNear;
-	show_loading_feedback();
-	execute_when_is_ready_true();
+//	set_actual_view(Near);
+	// execute_when_is_ready_true();
+//			if(get_actual_view() == Near){
+//				set_actual_view(Near);
+//				// loadNearStops();
+//			}else{
+//				set_actual_view(Favorites);
+//				// loadFavoritesStops();
+//			}
 	clean_menu();
-	load_view_for_bus_stops_type(ListTypeNear);
+	load_view_for_bus_stops_type(Near);
+	show_loading_feedback();
 
 	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
@@ -649,12 +642,12 @@ void bus_stop_show_near_seg(void) {
 void bus_stop_show_near(void) {
 //	//bus_stop_window_unload(ui.window);
 //	//favorites_bus_stop_deinit();
-//	listType = ListTypeNear;
+//	listType = Near;
 //	//favorites_bus_stop_init();
 //	loadNearStops();
 //	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 //	menu_layer_reload_data(ui.bus_stop_menu_layer);
-//	load_view_for_bus_stops_type(ListTypeNear);
+//	load_view_for_bus_stops_type(Near);
 //	menu_layer_reload_data(ui.bus_stop_menu_layer);
 //	//loadNearStops();
 //	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
