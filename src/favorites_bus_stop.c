@@ -362,6 +362,8 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 							center_y + dif_radius + VIEW_SYMBOL_LENS_RADIUS));
 		}
 	}else{
+
+
 		if(get_actual_view() == Near)
 			act_bus_stop = get_bus_stop_list_near_at_index(cell_index->row -1);
 		else
@@ -369,6 +371,10 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 
 		if(cell_index->row == bus_stop_row_actual){
 			// Bus Stop Lines
+			graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+//			text_layer_set_text_color(ctx, GColorWhite);
+//			graphics_context_set_text_color();
+
 			graphics_draw_text_vertically_center(ctx, act_bus_stop->lines, fonts_get_system_font(FONT_KEY_GOTHIC_18),
 					detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 		}else{
@@ -477,6 +483,8 @@ static void bus_stop_window_load(Window *window) {
 		.selection_changed = menu2_row_selection_changed,
 		.select_click = select2_click_handler,
 		.select_long_click= select2_long_click_handler,
+//		.select_click = select2_long_click_handler,
+//		.select_long_click= select2_click_handler,
 	});
 	#ifdef PBL_COLOR
 		menu_layer_pad_bottom_enable(ui.bus_stop_menu_layer,false);
@@ -498,14 +506,6 @@ static void bus_stop_window_load(Window *window) {
 
 	layer_add_child(window_layer, text_layer_get_layer(ui.feedback_text_layer));
 	show_loading_feedback();
-
-//	if(!get_JS_is_ready()){
-//		int ms = 800;
-//		waiting_ready_attempts++;
-//		APP_LOG(APP_LOG_LEVEL_INFO, "Waiting is_ready %dms...", (int) ms);
-//		app_timer_register(ms, execute_when_is_ready_true, NULL);
-//	}else {
-		//execute_when_is_ready_true();
 
 //				if(get_actual_view() == Near){
 //					set_actual_view(Near);
@@ -569,6 +569,7 @@ static void load_view_for_bus_stops_type(int _listType) {
 	
 	// listType = _listType;
 	set_actual_view(_listType);
+
 	// register_app_message_callbacks();
 
 	window_stack_push(ui.window, true /* Animated */);

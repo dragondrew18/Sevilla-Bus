@@ -8395,10 +8395,16 @@ function parseBusStopTimes(xml, onParsed) {
 
 function parseNearBusStops(xml, onParsed) {
 	
+	console.log('received: ' + xml);
+
+	
 	xml2js.parseString(xml, function (err, result) {
 	
 		var stops = [];
 		var _stops =  result['soap:Envelope']['soap:Body'][0]['ns2:getNodosCercanosResponse'][0]['nodosCercanos'][0]["nodo"];
+		
+		console.log('stops received: ' + _stops);
+		
 		
 		var i = 0;
 		for(i = 0; i < _stops.length; i++) {			
@@ -8665,9 +8671,10 @@ _utf8_decode : function (utftext) {
 }
 
 function getNodosCercanos(position) {
-	//console.log(position.coords.latitude);
-	//console.log(position.coords.longitude);
-	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + /*37.3605505*/ position.coords.latitude +'</latitud><longitud xmlns="">' + /*-5.9882894*/ position.coords.longitude + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+	console.log('latitude: ' + position.coords.latitude);
+	console.log('longitude: ' + position.coords.longitude);
+	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3578072 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9810109 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+//	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + /*37.3578072*/ position.coords.latitude +'</latitud><longitud xmlns="">' + /*-5.9882894*/ position.coords.longitude + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
 	var req = new XMLHttpRequest();
 	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true);
 	req.setRequestHeader("Authorization", "Basic " + Base64.encode("infotus-usermobile" + ":" + "2infotus0user1mobile2"));
@@ -8700,9 +8707,9 @@ function locationError(err) {
 }
 var locationOptions = { "timeout": 15000, "maximumAge": 60000 }; 
 
-Pebble.addEventListener("appmessage", function(e) {
+function receivedMessage(e) {
 	
-	/* console.log("Received message: " + JSON.stringify(e.payload)); */
+	console.log("Received message: " + JSON.stringify(e.payload));
 	
 	if(e.payload["favorites"]) {
 		sendFavoriteStops();
@@ -8724,19 +8731,21 @@ Pebble.addEventListener("appmessage", function(e) {
 	if(e.payload["fetchStopDetail"]) {
 		getTiempoNodo(e.payload["fetchStopDetail"]);
 	}
+	// Pebble.addEventListener("appmessage", receivedMessage);
 
-});
+}
 
-Pebble.addEventListener('ready', function() {
-	console.log('PebbleKit JS ready.');
-
-	// Update s_js_ready on watch
-	Pebble.sendAppMessage({'AppKeyJSReady': 1});
-});
+Pebble.addEventListener("appmessage", receivedMessage);
 
 },{"xml2js":17}]},{},[37])
 
 
+Pebble.addEventListener("ready", function() {
+	console.log("PebbleKit JS ready.");
+
+	// Update s_js_ready on watch
+	Pebble.sendAppMessage({"AppKeyJSReady": 1});
+});
 
 /*
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">

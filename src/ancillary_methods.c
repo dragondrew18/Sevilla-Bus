@@ -11,6 +11,8 @@ static bool is_ready = false;
 static int load_In_Progress = -1;
 
 void wait_message_queue(); // Declaration
+bool loadStopDetail(char *number);
+
 
 typedef struct {
 	DictionaryIterator **iterator;
@@ -42,6 +44,10 @@ int get_load_in_progress(){
 
 void set_load_in_progress(int type){
 	load_In_Progress = type;
+}
+
+void refresh_load_in_progress(){
+//	load_In_Progress = type;
 }
 
 void set_JS_is_ready(bool input){
@@ -108,6 +114,7 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 			APP_LOG(APP_LOG_LEVEL_ERROR, "Error establishing the connection: %d", (int)res);
 			result = false;
 		}
+//		if (dict_write_cstring(*iterator, key, value) != DICT_OK && result) {
 		if (dict_write_uint8(*iterator, key, value) != DICT_OK && result) {
 			// Error writing data petition
 			//return;
@@ -121,7 +128,7 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 			//return;
 			result = true;
 		} else {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent!");
+			APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent! (code:%lu)", (unsigned long) key);
 			result = false;
 		}
 	return result;
@@ -129,14 +136,17 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 }
 
 void no_message_in_progress(){
+	APP_LOG(APP_LOG_LEVEL_INFO, "no_message_in_progress");
 	message_in_progess = -1;
 	timer_load_in_progress_status = false;
 }
 
 void response_received(){
 	if (!timer_load_in_progress_status){
+		//app_timer_cancel(timer_response);
 		timer_response = app_timer_register(WAIT_RESPONSE, no_message_in_progress, NULL);
-		message_in_progess = -1;
+		//message_in_progess = -1;
+		timer_load_in_progress_status = true;
 	}else
 		app_timer_reschedule(timer_response, WAIT_RESPONSE);
 }
@@ -148,7 +158,10 @@ void wait_message_queue(){
 		// && message_queue_position == message_queue_position_lower
 		MessageQueue toSend = message_queue[message_queue_position_lower];
 		update_message_queue_position(false);
-		send_message(toSend.iterator, toSend.key, toSend.value);
+		if(toSend.key != TUSSAM_KEY_FETCH_STOP_DETAIL)
+			send_message(toSend.iterator, toSend.key, toSend.value);
+		else
+			loadStopDetail("517");
 	}else{
 		APP_LOG(APP_LOG_LEVEL_INFO, "message_in_progess: %d ...", message_in_progess);
 		APP_LOG(APP_LOG_LEVEL_INFO, "is_ready: %d ...", is_ready);
@@ -174,10 +187,12 @@ void test_received_handler(DictionaryIterator *iter, void *context) {
 		set_JS_is_ready(true);
 		response_received();
 		return;
-	}
-	received_data(iter, context);
+	} else {
+		received_data(iter, context);
 
-	response_received();
+		response_received();
+	}
+	APP_LOG(APP_LOG_LEVEL_WARNING, "data procesed!");
 }
 
 
@@ -217,7 +232,6 @@ void ancillary_init(){
 //	app_message_register_inbox_received(test_received_handler);
 	DictionaryIterator *iter;
 
-	send_message(&iter, TUSSAM_KEY_FAVORITES,1);
 }
 
 static void test_dropped_handler(AppMessageResult reason, void *context) {
@@ -226,13 +240,13 @@ static void test_dropped_handler(AppMessageResult reason, void *context) {
 }
 static void test_out_sent_handler(DictionaryIterator *sent, void *context) {
 	// outgoing message was delivered
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "test_out_sent_handler");
+	APP_LOG(APP_LOG_LEVEL_INFO, "mensaje recibido en js satisfactoriamente");
 }
 
 static void test_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
 	// outgoing message failed
 
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "test_failed_handler");
+	APP_LOG(APP_LOG_LEVEL_ERROR, "fallo en el envío del mensaje");
 
 //	text_layer_set_text(ui.feedback_text_layer, "Connection error.");
 ////	hide_bus_stop_detail_layers(true);
@@ -249,3 +263,51 @@ void ancillary_message_context(){
 	app_message_register_outbox_failed(test_failed_handler);
 
 }
+
+bool loadStopDetail(char *number) {
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "loadStopDetail");
+
+	DictionaryIterator *iter;
+
+	if (is_message_in_progess()) {
+		message_queue[message_queue_position].iterator = &iter;
+		message_queue[message_queue_position].key =
+				TUSSAM_KEY_FETCH_STOP_DETAIL;
+		message_queue[message_queue_position].value = 0;
+		update_message_queue_position(true);
+		timer_load_in_progress = app_timer_register(WAIT_EMPTY_QUEUE,
+				wait_message_queue, NULL);
+		APP_LOG(APP_LOG_LEVEL_INFO, "Reshedule message: %dms",
+				WAIT_EMPTY_QUEUE);
+		return true;
+	} else {
+		message_in_progess = TUSSAM_KEY_FETCH_STOP_DETAIL;
+		set_load_in_progress(get_list_type());
+		AppMessageResult res = app_message_outbox_begin(&iter);
+		static bool result = true;
+
+		if (res != APP_MSG_OK) {
+			// Error establishing the connection
+			APP_LOG(APP_LOG_LEVEL_ERROR, "Error establishing the connection: %d", (int )res);
+			result = false;
+		}
+		if (dict_write_cstring(iter, TUSSAM_KEY_FETCH_STOP_DETAIL, number) != DICT_OK && result) {
+			// Error writing data petition
+			//return;
+			result = false;
+		}
+		if (result) {
+			res = app_message_outbox_send();
+		}
+		if (res != APP_MSG_OK) {
+			APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the data: %d", (int )res);
+			//return;
+			result = true;
+		} else {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent! (code:%lu)", (unsigned long ) TUSSAM_KEY_FETCH_STOP_DETAIL);
+			result = false;
+		}
+		return result;
+	}
+}
+

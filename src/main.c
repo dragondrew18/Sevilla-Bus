@@ -25,8 +25,12 @@ static void init(void) {
 	ancillary_init();
 
 	favorites_bus_stop_init();
+
 	bus_stop_detail_init();
 	win_edit_init();
+
+	//bus_stop_detail_show("517", "pepeJuan");
+
 }
 
 static void deinit(void) {

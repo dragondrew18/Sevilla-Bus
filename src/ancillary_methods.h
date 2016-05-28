@@ -24,3 +24,7 @@ void ancillary_message_context();
 int get_load_in_progress(void);
 
 void set_load_in_progress(int type);
+
+void refresh_load_in_progress(void);
+
+bool loadStopDetail(char *number);
