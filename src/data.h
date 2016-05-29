@@ -58,6 +58,6 @@ int get_actual_view(void);
 
 void set_actual_view(int view);
 
-StopDetailItem get_bus_stop_detail(void);
+StopDetailItem* get_bus_stop_detail(void);
 
 void define_stop_detail(char *number, char *name);

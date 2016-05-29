@@ -8673,7 +8673,9 @@ _utf8_decode : function (utftext) {
 function getNodosCercanos(position) {
 	console.log('latitude: ' + position.coords.latitude);
 	console.log('longitude: ' + position.coords.longitude);
-	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3578072 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9810109 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+	console.log("Usando una ubicación manual ! ! !");
+	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3807563 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9863238 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+//	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3807563 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9863238 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
 //	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + /*37.3578072*/ position.coords.latitude +'</latitud><longitud xmlns="">' + /*-5.9882894*/ position.coords.longitude + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
 	var req = new XMLHttpRequest();
 	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true);
@@ -8707,6 +8709,7 @@ function locationError(err) {
 }
 var locationOptions = { "timeout": 15000, "maximumAge": 60000 }; 
 
+// },{"xml2js":17}]},{},[37])
 function receivedMessage(e) {
 	
 	console.log("Received message: " + JSON.stringify(e.payload));
@@ -8735,9 +8738,10 @@ function receivedMessage(e) {
 
 }
 
+
 Pebble.addEventListener("appmessage", receivedMessage);
 
-},{"xml2js":17}]},{},[37])
+// },{"xml2js":17}]},{},[37])
 
 
 Pebble.addEventListener("ready", function() {
@@ -8746,6 +8750,8 @@ Pebble.addEventListener("ready", function() {
 	// Update s_js_ready on watch
 	Pebble.sendAppMessage({"AppKeyJSReady": 1});
 });
+
+},{"xml2js":17}]},{},[37])
 
 /*
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">

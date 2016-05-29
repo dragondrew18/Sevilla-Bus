@@ -32,8 +32,8 @@ BusStopListItem* get_bus_stop_list_favorites_at_index(int index) {
 	}
 }
 
-StopDetailItem get_bus_stop_detail(void){
-	return s_stop_detail;
+StopDetailItem* get_bus_stop_detail(void){
+	return &s_stop_detail;
 }
 
 int get_actual_view(void){
@@ -55,7 +55,7 @@ void set_actual_view(int view){
 //		s_stop_detail = NULL;
 //		send_message(&iter, TUSSAM_KEY_NEAR,1);
 	}else if (view == Near && !loaded_near){// && get_JS_is_ready()){
-		send_message(&iter, TUSSAM_KEY_NEAR,1);
+//		send_message(&iter, TUSSAM_KEY_NEAR,1);
 		//send_message(&iter, TUSSAM_KEY_FAVORITES,1);
 //		s_stop_detail = NULL;
 	}else if (view == Details && get_JS_is_ready()){

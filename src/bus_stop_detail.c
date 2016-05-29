@@ -93,7 +93,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index
 	APP_LOG(APP_LOG_LEVEL_INFO, "Crash-04");
 //	APP_LOG(APP_LOG_LEVEL_INFO, "Actual number of lines: %d", get_bus_stop_detail().number_of_lines);
 	if(in_view){
-		return get_bus_stop_detail().number_of_lines + 1;
+		return get_bus_stop_detail()->number_of_lines + 1;
 	}else{
 		return 0;
 	}
@@ -131,31 +131,42 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 	if(a == 0){
 		APP_LOG(APP_LOG_LEVEL_INFO, "cell_index is 0");
 
-//		GRect detail_rect = GRect(43, 0, 99, 42);
-		GRect detail_rect = GRect(48, 0, 93, 42);
+		GRect detail_rect = GRect(43, 0, 99, 42);
+//		GRect detail_rect = GRect(48, 0, 93, 42);
 		GRect bus_stop_rect = GRect(2, 0, 45, 42);
 
+//		if(get_is_defined_detail()){
 
-//		graphics_draw_text(ctx, get_bus_stop_detail().name, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
-//		graphics_draw_text(ctx, details.number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(2, 5, 30, 24), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
-
+//			char number[BUS_STOP_DETAIL_NUMBER_TEXT_LENGTH] = get_bus_stop_detail()->number;
+//			char name[BUS_STOP_DETAIL_NAME_TEXT_LENGTH] = get_bus_stop_detail().name;
 //
-////		// Bus Stop Name
-//		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail().name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+		// Bus Stop Name
+		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+				detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
+
+		// Line Number
+		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
+
+//		graphics_draw_text_vertically_center(ctx, "Parada de Juan", fonts_get_system_font(FONT_KEY_GOTHIC_14),
 //				detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 //
-////		// Line Number
-//		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail().number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+//		//		// Line Number
+//		graphics_draw_text_vertically_center(ctx, "555", fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
 //				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
+//		}
 	}else{
 		APP_LOG(APP_LOG_LEVEL_INFO, "cell_index not is 0");
-		LineTimesItem lineTimeItem = get_bus_stop_detail().linesTimes[(cell_index->row) - 1];
+		LineTimesItem lineTimeItem = get_bus_stop_detail()->linesTimes[(cell_index->row) - 1];
 
 		bool got_estimate_1 = got_estimate(lineTimeItem.bus1);
 		bool got_estimate_2 = got_estimate(lineTimeItem.bus2);
-
-		graphics_context_set_text_color(ctx, GColorBlack);
-
+		if(cell_index->row == times_row_actual){
+			// Bus Stop Lines
+			graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+		}else{
+			graphics_context_set_text_color(ctx, GColorBlack);
+		}
 		// Line Number
 		graphics_draw_text(ctx, lineTimeItem.name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(2, 5, 30, 24), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 

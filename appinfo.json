@@ -33,6 +33,7 @@
     "watchface": false,
     "hiddenApp": false
   },
+  "enableMultiJS": true,
   "targetPlatforms": [
     "aplite",
     "basalt",
