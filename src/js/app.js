@@ -8706,8 +8706,9 @@ function getNodosCercanos(position) {
 }
 
 function locationError(err) {
+	console.log('location error (' + err.code + '): ' + err.message + '[Debería notificarse]');
 }
-var locationOptions = { "timeout": 15000, "maximumAge": 60000 }; 
+var locationOptions = { "timeout": 30000, "maximumAge": 600000 }; 
 
 // },{"xml2js":17}]},{},[37])
 function receivedMessage(e) {
@@ -8719,6 +8720,7 @@ function receivedMessage(e) {
 	}	
 	
 	if(e.payload["near"]) {
+		console.log("Solicitando la ubicación... ");
 		var locationWatcher = navigator.geolocation.getCurrentPosition(getNodosCercanos, locationError, locationOptions);
 		// console.log("test");
 	}
@@ -8734,15 +8736,15 @@ function receivedMessage(e) {
 	if(e.payload["fetchStopDetail"]) {
 		getTiempoNodo(e.payload["fetchStopDetail"]);
 	}
-	// Pebble.addEventListener("appmessage", receivedMessage);
+//	Pebble.removeEventListener("appmessage", receivedMessage);
+//	Pebble.addEventListener("appmessage", receivedMessage);
+//	Pebble.showSimpleNotificationOnPebble("title", "body");
+
 
 }
 
 
 Pebble.addEventListener("appmessage", receivedMessage);
-
-// },{"xml2js":17}]},{},[37])
-
 
 Pebble.addEventListener("ready", function() {
 	console.log("PebbleKit JS ready.");

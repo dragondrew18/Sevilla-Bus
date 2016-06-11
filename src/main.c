@@ -3,6 +3,7 @@
 #include "bus_stop_detail.h"
 #include "favorites_bus_stop.h"
 #include "bus_stop_number_select.h"
+#include "view_null.h"
 
 static void init(void) {
 	ancillary_message_context();
@@ -27,6 +28,9 @@ static void init(void) {
 	favorites_bus_stop_init();
 
 	bus_stop_detail_init();
+
+	null_init();
+
 	win_edit_init();
 
 	//bus_stop_detail_show("517", "pepeJuan");
@@ -38,6 +42,9 @@ static void deinit(void) {
 	bus_stop_detail_deinit();
 
 	favorites_bus_stop_deinit();
+
+	null_deinit();
+
 	win_edit_deinit();
 }
 

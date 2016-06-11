@@ -38,11 +38,11 @@ bool get_JS_is_ready() {
 	return is_ready;
 }
 
-int get_load_in_progress(){
+int get_load_in_progress(){ // Debería contener la key enviada en el mensaje
 	return load_In_Progress;
 }
 
-void set_load_in_progress(int type){
+void set_load_in_progress(int type){ // Debería contener la key enviada en el mensaje
 	load_In_Progress = type;
 }
 
@@ -55,6 +55,10 @@ void set_JS_is_ready(bool input){
 
 	is_ready = input;
 }
+
+AppMessageResult ancillary_app_message_outbox_begin(DictionaryIterator **iterator);
+
+AppMessageResult ancillary_app_message_outbox_send(void);
 
 void update_message_queue_position(bool increase){
 	if(increase){
@@ -107,7 +111,7 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 		message_in_progess = key;
 		set_load_in_progress(get_list_type());
 		AppMessageResult res = app_message_outbox_begin(iterator);
-		static bool result = true;
+		bool result = true;
 
 		if (res != APP_MSG_OK) {
 			// Error establishing the connection

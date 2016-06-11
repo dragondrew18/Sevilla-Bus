@@ -12,17 +12,17 @@ static bool loaded_favorites = false;
 static bool loaded_near = false;
 static bool loaded_detail = false;
 
-static bool no_bus_stop = false;
+bool no_bus_stop = false;
 
-static enum View actual_view = Favorites;
+enum View actual_view = Favorites;
 
-static int list_favorites_num_of_items = 0;
-static int list_nearby_num_of_items = 0;
-static int list_details_num_of_items = 0;
+int list_favorites_num_of_items = 0;
+int list_nearby_num_of_items = 0;
+int list_details_num_of_items = 0;
 
 static StopDetailItem s_stop_detail;
 
-static enum ListType listType = ListTypeFavorites;
+enum ListType listType = ListTypeFavorites;
 
 BusStopListItem* get_bus_stop_list_favorites_at_index(int index) {
 	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
@@ -48,17 +48,21 @@ void set_actual_view(int view){
 
 	if(view == Favorites && !loaded_favorites){// && get_JS_is_ready()){
 //	if(view == Favorites && !loaded_favorites) && get_JS_is_ready()){
+		listType = Favorites;
 		send_message(&iter, TUSSAM_KEY_FAVORITES,1);
 //		loadStopDetail("517");
 //		send_message(&iter, TUSSAM_KEY_FETCH_STOP_DETAIL,"517");
-
 //		s_stop_detail = NULL;
 //		send_message(&iter, TUSSAM_KEY_NEAR,1);
 	}else if (view == Near && !loaded_near){// && get_JS_is_ready()){
-//		send_message(&iter, TUSSAM_KEY_NEAR,1);
+		listType = Near;
+		send_message(&iter, TUSSAM_KEY_NEAR,1);
+//		loadStopDetail("517");
+
 		//send_message(&iter, TUSSAM_KEY_FAVORITES,1);
 //		s_stop_detail = NULL;
 	}else if (view == Details && get_JS_is_ready()){
+		listType = Details;
 //		send_message(&iter, TUSSAM_KEY_NEAR,1);
 //		s_stop_detail = NULL;
 	}
@@ -74,6 +78,7 @@ void define_stop_detail(char *number, char *name){
 }
 
 int get_bus_list_num_of_items(void){
+//	APP_LOG(APP_LOG_LEVEL_INFO, "Número de vista: %d", (int) actual_view);
 	if(actual_view == Favorites)
 		return list_favorites_num_of_items;
 	else if(actual_view == Near)
@@ -102,11 +107,13 @@ void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite)
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "Parada recibida: %s desde %d", number, get_load_in_progress());
 
+	APP_LOG(APP_LOG_LEVEL_INFO, "load_in_progress actual: %d", (int) get_load_in_progress());
+
 	if(get_load_in_progress() == ListTypeNear){
-		strcpy(bus_stop_list_near[list_favorites_num_of_items].number, number);
-		strcpy(bus_stop_list_near[list_favorites_num_of_items].name, name);
-		strcpy(bus_stop_list_near[list_favorites_num_of_items].lines, lines);
-		bus_stop_list_near[list_favorites_num_of_items].favorite = favorite == 1;
+		strcpy(bus_stop_list_near[list_nearby_num_of_items].number, number);
+		strcpy(bus_stop_list_near[list_nearby_num_of_items].name, name);
+		strcpy(bus_stop_list_near[list_nearby_num_of_items].lines, lines);
+		bus_stop_list_near[list_nearby_num_of_items].favorite = favorite == 1;
 		list_nearby_num_of_items++;
 		loaded_near = true;
 	}else if(get_load_in_progress() == ListTypeFavorites){

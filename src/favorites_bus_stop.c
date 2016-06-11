@@ -2,6 +2,7 @@
 #include "bus_stop_detail.h"
 #include "bus_stop_number_select.h"
 #include "ancillary_methods.h"
+#include "view_null.h"
 #include "keys.h"
 #include "data.h"
 
@@ -246,7 +247,8 @@ static void select2_click_handler(struct MenuLayer *menu_layer,
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "select_click_handler");
 	if(bus_stop_row_actual == 0){
 		if(get_actual_view() == Favorites){
-			bus_stop_show_near();
+			null_show();
+			// bus_stop_show_near();
 			//bus_stop_list_num_of_items = 0;
 		}else if (get_actual_view() == Near)
 			win_edit_show();
@@ -415,6 +417,7 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 }
 
 void update_loading_feedback_favorites(bool loaded){
+	APP_LOG(APP_LOG_LEVEL_INFO, "Número de paradas: %d", (int) get_bus_list_num_of_items());
 	if(loaded == true && get_bus_list_num_of_items() > 0){
 		hide_feedback_layers(true);
 	}else if(loaded == true && get_bus_list_num_of_items() < 1){
@@ -637,7 +640,8 @@ void bus_stop_show_near_seg(void) {
 
 	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
-	//window_stack_push(ui.window, true /* Animated */);
+//	window_stack_pop(false);
+//	window_stack_push(ui.window, true /* Animated */);
 }
 
 void bus_stop_show_near(void) {
@@ -652,6 +656,7 @@ void bus_stop_show_near(void) {
 //	menu_layer_reload_data(ui.bus_stop_menu_layer);
 //	//loadNearStops();
 //	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+
 	bus_stop_show_near_seg();
 }
 
