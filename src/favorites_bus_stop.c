@@ -2,7 +2,6 @@
 #include "bus_stop_detail.h"
 #include "bus_stop_number_select.h"
 #include "ancillary_methods.h"
-#include "view_null.h"
 #include "keys.h"
 #include "data.h"
 
@@ -247,8 +246,7 @@ static void select2_click_handler(struct MenuLayer *menu_layer,
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "select_click_handler");
 	if(bus_stop_row_actual == 0){
 		if(get_actual_view() == Favorites){
-			null_show();
-			// bus_stop_show_near();
+			bus_stop_show_near();
 			//bus_stop_list_num_of_items = 0;
 		}else if (get_actual_view() == Near)
 			win_edit_show();
@@ -371,7 +369,8 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 		else
 			act_bus_stop = get_bus_stop_list_favorites_at_index(cell_index->row -1);
 
-		if(cell_index->row == bus_stop_row_actual){
+		if(// cell_index->row == bus_stop_row_actual
+				menu_cell_layer_is_highlighted(cell_layer)){
 			// Bus Stop Lines
 			graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
 //			text_layer_set_text_color(ctx, GColorWhite);
@@ -417,7 +416,6 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 }
 
 void update_loading_feedback_favorites(bool loaded){
-	APP_LOG(APP_LOG_LEVEL_INFO, "Número de paradas: %d", (int) get_bus_list_num_of_items());
 	if(loaded == true && get_bus_list_num_of_items() > 0){
 		hide_feedback_layers(true);
 	}else if(loaded == true && get_bus_list_num_of_items() < 1){
@@ -509,16 +507,6 @@ static void bus_stop_window_load(Window *window) {
 
 	layer_add_child(window_layer, text_layer_get_layer(ui.feedback_text_layer));
 	show_loading_feedback();
-
-//				if(get_actual_view() == Near){
-//					set_actual_view(Near);
-//					// loadNearStops();
-//				}else{
-//					set_actual_view(Favorites);
-//					// loadFavoritesStops();
-//				}
-
-//	}
 
 	//force_back_button(ui.window, ui.bus_stop_menu_layer);
 	previous_ccp = window_get_click_config_provider(ui.window);
