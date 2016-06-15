@@ -5,12 +5,12 @@
 #include "bus_stop_detail.h"
 #include "ancillary_methods.h"
 
-static BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
-static BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];
+BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
+BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];
 
-static bool loaded_favorites = false;
-static bool loaded_near = false;
-static bool loaded_detail = false;
+bool loaded_favorites = false;
+bool loaded_near = false;
+bool loaded_detail = false;
 
 bool no_bus_stop = false;
 
@@ -20,7 +20,7 @@ int list_favorites_num_of_items = 0;
 int list_nearby_num_of_items = 0;
 int list_details_num_of_items = 0;
 
-static StopDetailItem s_stop_detail;
+StopDetailItem s_stop_detail;
 
 enum ListType listType = ListTypeFavorites;
 

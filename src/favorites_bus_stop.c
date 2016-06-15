@@ -281,6 +281,7 @@ static uint16_t menu2_get_num_sections_callback(MenuLayer *me, void *data) {
 }
 
 static uint16_t menu2_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
+//	APP_LOG(APP_LOG_LEVEL_INFO, "Número de items en la lista: %d", get_bus_list_num_of_items());
 		return get_bus_list_num_of_items() + 1;
 }
 
@@ -291,7 +292,7 @@ static int16_t menu2_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_ind
 static void click_back_action(ClickRecognizerRef recognizer, void *context) {
 
 	if(get_actual_view() == Near){
-		window_stack_pop(true);
+		//window_stack_pop(true);
 		// set_actual_view(Favorites);
 		// show_loading_feedback();
 		// clean_menu();
@@ -552,8 +553,8 @@ static void bus_stop_window_disappear(Window *window) {
 	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "This windows disappear... %d times", test_iter);
 
 //	listType = Favorites;
-	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
-	menu_layer_reload_data(ui.bus_stop_menu_layer);
+//	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
+//	menu_layer_reload_data(ui.bus_stop_menu_layer);
 }
 
 static void load_view_for_bus_stops_type(int _listType) {
@@ -590,7 +591,7 @@ void bus_stop_show_favorites_return(void) {
 	clean_menu();
 	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
-	window_stack_push(ui.window, false /* Animated */);
+//	window_stack_push(ui.window, false /* Animated */);
 }
 
 void favorites_bus_stop_init(void) {
@@ -624,7 +625,10 @@ void bus_stop_show_near_seg(void) {
 //			}
 	clean_menu();
 	load_view_for_bus_stops_type(Near);
-	show_loading_feedback();
+
+	if(get_bus_list_num_of_items() < 1){
+		show_loading_feedback();
+	}
 
 	layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);

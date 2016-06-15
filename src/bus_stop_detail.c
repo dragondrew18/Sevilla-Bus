@@ -9,7 +9,7 @@ static struct BusStopDetailUi {
 	TextLayer *feedback_text_layer;
 } ui;
 
-static uint16_t times_row_actual = 0;
+uint16_t times_row_actual = 0;
 
 int counter = 0;
 
@@ -161,7 +161,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 
 		bool got_estimate_1 = got_estimate(lineTimeItem.bus1);
 		bool got_estimate_2 = got_estimate(lineTimeItem.bus2);
-		if(cell_index->row == times_row_actual){
+		if(menu_cell_layer_is_highlighted(cell_layer)){
 			// Bus Stop Lines
 			graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
 		}else{
@@ -208,7 +208,7 @@ static void time_row_selection_changed(struct MenuLayer *menu_layer,
 
 	layer_mark_dirty(menu_layer_get_layer(menu_layer));
 
-	times_row_actual = new_index.row;
+	// times_row_actual = new_index.row;
 }
 
 //static void loadStopDetail(char *number) {
