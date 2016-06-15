@@ -130,14 +130,14 @@ void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite)
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "load_in_progress actual: %d", (int) get_load_in_progress());
 
-	if(get_load_in_progress() == ListTypeNear){
+	if(get_load_in_progress() == TUSSAM_KEY_NEAR){
 		strcpy(bus_stop_list_near[list_nearby_num_of_items].number, number);
 		strcpy(bus_stop_list_near[list_nearby_num_of_items].name, name);
 		strcpy(bus_stop_list_near[list_nearby_num_of_items].lines, lines);
 		bus_stop_list_near[list_nearby_num_of_items].favorite = favorite == 1;
 		list_nearby_num_of_items++;
 		loaded_near = true;
-	}else if(get_load_in_progress() == ListTypeFavorites){
+	}else if(get_load_in_progress() == TUSSAM_KEY_FAVORITES){
 		strcpy(bus_stop_list_favorites[list_favorites_num_of_items].number, number);
 		strcpy(bus_stop_list_favorites[list_favorites_num_of_items].name, name);
 		strcpy(bus_stop_list_favorites[list_favorites_num_of_items].lines, lines);
@@ -147,7 +147,7 @@ void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite)
 	}
 
 
-	if(get_load_in_progress() == ListTypeNear && list_nearby_num_of_items >= 1){
+	if(get_load_in_progress() == TUSSAM_KEY_NEAR && list_nearby_num_of_items >= 1){
 		vibes_short_pulse();
 	}
 

@@ -1,6 +1,6 @@
 #pragma once
 
-enum {
+enum Keys {
 	TUSSAM_KEY_FAVORITES,
 	TUSSAM_KEY_NEAR,
 	TUSSAM_KEY_STOP_NAME,

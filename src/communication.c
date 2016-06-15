@@ -8,7 +8,7 @@ static bool is_ready = false;
 #define WAIT_EMPTY_QUEUE (500)
 #define MESSAGE_QUEUE_LENGTH (20)
 
-static int load_In_Progress = -1;
+enum Keys load_In_Progress = -1;
 
 void wait_message_queue(); // Declaration
 bool loadStopDetail(char *number);
@@ -18,6 +18,7 @@ typedef struct {
 	DictionaryIterator **iterator;
 	uint32_t key;
 	uint8_t value;
+	char* valueChar;
 } MessageQueue;
 
 static int message_in_progess = (int) AppKeyJSReady;
@@ -95,7 +96,7 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 		return true;
 	}else {
 		message_in_progess = key;
-		set_load_in_progress(get_list_type());
+		set_load_in_progress(key);
 		AppMessageResult res = app_message_outbox_begin(iterator);
 		bool result = true;
 
@@ -128,6 +129,7 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 void no_message_in_progress(){
 	APP_LOG(APP_LOG_LEVEL_INFO, "no_message_in_progress");
 	message_in_progess = -1;
+	load_In_Progress = -1;
 	timer_load_in_progress_status = false;
 }
 
@@ -148,10 +150,10 @@ void wait_message_queue(){
 		// && message_queue_position == message_queue_position_lower
 		MessageQueue toSend = message_queue[message_queue_position_lower];
 		update_message_queue_position(false);
-//		if(toSend.key != TUSSAM_KEY_FETCH_STOP_DETAIL)
+		if(toSend.key != TUSSAM_KEY_FETCH_STOP_DETAIL)
 			send_message(toSend.iterator, toSend.key, toSend.value);
-//		else
-//			loadStopDetail("517");
+		else
+			loadStopDetail(toSend.valueChar);
 	}else{
 		APP_LOG(APP_LOG_LEVEL_INFO, "message_in_progess: %d ...", message_in_progess);
 		APP_LOG(APP_LOG_LEVEL_INFO, "is_ready: %d ...", is_ready);
@@ -249,7 +251,7 @@ bool loadStopDetail(char *number) {
 		message_queue[message_queue_position].iterator = &iter;
 		message_queue[message_queue_position].key =
 				TUSSAM_KEY_FETCH_STOP_DETAIL;
-		message_queue[message_queue_position].value = 0;
+		message_queue[message_queue_position].valueChar = number;
 		update_message_queue_position(true);
 		timer_load_in_progress = app_timer_register(WAIT_EMPTY_QUEUE,
 				wait_message_queue, NULL);
@@ -258,7 +260,7 @@ bool loadStopDetail(char *number) {
 		return true;
 	} else {
 		message_in_progess = TUSSAM_KEY_FETCH_STOP_DETAIL;
-		set_load_in_progress(get_list_type());
+		set_load_in_progress(message_in_progess);
 		AppMessageResult res = app_message_outbox_begin(&iter);
 		bool result = true;
 
