@@ -44,6 +44,8 @@ typedef struct {
 
 BusStopListItem* get_bus_stop_list_favorites_at_index(int index);
 
+BusStopListItem* get_bus_stop_list_at_index(int index);
+
 BusStopListItem* get_bus_stop_list_near_at_index(int index);
 
 void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite);

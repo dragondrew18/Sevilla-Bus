@@ -162,10 +162,10 @@ void wait_message_queue(){
 		// && message_queue_position == message_queue_position_lower
 		MessageQueue toSend = message_queue[message_queue_position_lower];
 		update_message_queue_position(false);
-		if(toSend.key != TUSSAM_KEY_FETCH_STOP_DETAIL)
+//		if(toSend.key != TUSSAM_KEY_FETCH_STOP_DETAIL)
 			send_message(toSend.iterator, toSend.key, toSend.value);
-		else
-			loadStopDetail("517");
+//		else
+//			loadStopDetail("517");
 	}else{
 		APP_LOG(APP_LOG_LEVEL_INFO, "message_in_progess: %d ...", message_in_progess);
 		APP_LOG(APP_LOG_LEVEL_INFO, "is_ready: %d ...", is_ready);

@@ -30,6 +30,8 @@ static void init(void) {
 
 	win_edit_init();
 
+	bus_stop_show_favorites();
+
 	//bus_stop_detail_show("517", "pepeJuan");
 
 }

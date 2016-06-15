@@ -32,6 +32,27 @@ BusStopListItem* get_bus_stop_list_favorites_at_index(int index) {
 	}
 }
 
+BusStopListItem* get_bus_stop_list_near_at_index(int index) {
+	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
+		return NULL;
+	} else {
+		return &bus_stop_list_near[index];
+	}
+}
+
+BusStopListItem* get_bus_stop_list_at_index(int index) {
+	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
+		return NULL;
+	} else {
+		if (get_actual_view() == Near)
+			return &bus_stop_list_near[index];
+		else if (get_actual_view() == Favorites)
+			return &bus_stop_list_favorites[index];
+		else
+			return NULL;
+	}
+}
+
 StopDetailItem* get_bus_stop_detail(void){
 	return &s_stop_detail;
 }
@@ -83,21 +104,17 @@ int get_bus_list_num_of_items(void){
 		return list_favorites_num_of_items;
 	else if(actual_view == Near)
 		return list_nearby_num_of_items;
-	else
+	else if(actual_view == Details)
 		return list_details_num_of_items;
+	else
+		return 0;
 }
 
 int get_list_type(void){
 	return listType;
 }
 
-BusStopListItem* get_bus_stop_list_near_at_index(int index) {
-	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
-		return NULL;
-	} else {
-		return &bus_stop_list_near[index];
-	}
-}
+
 
 void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite) {
 

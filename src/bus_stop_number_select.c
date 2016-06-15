@@ -3,6 +3,8 @@
 #include "bus_stop_detail.h"
 #include "favorites_bus_stop.h"
 #include "ancillary_methods.h"
+#include "data.h"
+
 
 
 static void time_window_load(Window* window);
@@ -150,9 +152,10 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 		puntero_char_array = char_array;
 
 		bus_stop_detail_show(puntero_char_array, "");
-	}else
+	}else{
 		s_selection++;
 		layer_mark_dirty(ui.s_canvas_layer);
+	}
 }
 
 static void back_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -160,7 +163,7 @@ static void back_click_handler(ClickRecognizerRef recognizer, void *context) {
 	s_selection--;
 
 	if(s_selection == -1) {
-		set_list_type_to_near();
+		set_actual_view(Near);
 		window_stack_pop(true);
 	}
 	else
