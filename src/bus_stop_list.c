@@ -2,6 +2,7 @@
 #include "bus_stop_detail.h"
 #include "bus_stop_number_select.h"
 #include "ancillary_methods.h"
+#include "communication.h"
 #include "keys.h"
 #include "data.h"
 
@@ -18,6 +19,7 @@ static struct BusStopListUi {
 } ui;
 
 ClickConfigProvider previous_ccp; // ¿es necesario?
+
 
 // - + - + - Declaration - + - + -
 void bus_stop_show_near();

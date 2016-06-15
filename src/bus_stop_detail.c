@@ -2,22 +2,27 @@
 #include "keys.h"
 #include "data.h"
 #include "ancillary_methods.h"
+#include "communication.h"
 
+
+// - + - + - Common Variables - + - + -
 static struct BusStopDetailUi {
 	Window *window;
 	MenuLayer *menu_layer;
 	TextLayer *feedback_text_layer;
 } ui;
 
-uint16_t times_row_actual = 0;
 ClickConfigProvider previous_ccp; // ¿es necesario?
-
-
 int counter = 0;
 
 bool in_view = false;
 
 
+// - + - + - Declaration - + - + -
+
+
+
+// - + - + - Methods - + - + -
 void set_bus_stop_list_hidden(bool hidden) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Crash-01");
 

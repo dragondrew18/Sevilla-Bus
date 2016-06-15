@@ -1,7 +1,7 @@
 #include <pebble.h>
-#include "ancillary_methods.h"
+#include "communication.h"
 #include "bus_stop_detail.h"
-#include "favorites_bus_stop.h"
+#include "bus_stop_list.h"
 #include "bus_stop_number_select.h"
 
 static void init(void) {
@@ -31,9 +31,6 @@ static void init(void) {
 	win_edit_init();
 
 	bus_stop_show_favorites();
-
-	//bus_stop_detail_show("517", "pepeJuan");
-
 }
 
 static void deinit(void) {

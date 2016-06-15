@@ -1,9 +1,9 @@
 #include <pebble.h>
 #include "data.h"
 #include "keys.h"
-#include "favorites_bus_stop.h"
 #include "bus_stop_detail.h"
-#include "ancillary_methods.h"
+#include "bus_stop_list.h"
+#include "communication.h"
 
 BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
 BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];

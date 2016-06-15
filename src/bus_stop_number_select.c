@@ -1,8 +1,8 @@
 #include <pebble.h>
 #include "keys.h"
 #include "bus_stop_detail.h"
-#include "favorites_bus_stop.h"
 #include "ancillary_methods.h"
+#include "bus_stop_list.h"
 #include "data.h"
 
 
