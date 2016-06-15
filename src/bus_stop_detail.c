@@ -23,7 +23,7 @@ bool in_view = false;
 
 
 // - + - + - Methods - + - + -
-void show_log(uint8_t log_level, const char* description){
+void show_log(AppLogLevel log_level, const char* description){
 	// APP_LOG(log_level, description);
 }
 
@@ -127,6 +127,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 1 !");
 			// Time 1
 //			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 		} else if (got_estimate_2) {
 // SI se descomenta falla en el desplazamiento de la lista! ! !

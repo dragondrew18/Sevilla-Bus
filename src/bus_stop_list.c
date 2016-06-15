@@ -146,14 +146,6 @@ static void force_back_button(void *context){
 
 static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
 
-	BusStopListItem *act_bus_stop;
-
-	if(get_actual_view() == Near){
-		act_bus_stop = get_bus_stop_list_near_at_index(cell_index->row);
-	}else{
-		act_bus_stop = get_bus_stop_list_favorites_at_index(cell_index->row);
-	}
-
 	graphics_context_set_text_color(ctx, GColorBlack);
 #ifdef PBL_RECT
 	GRect detail_rect = GRect(48, 0, 93, 42);
@@ -198,6 +190,7 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 		}
 	}else{
 
+		BusStopListItem *act_bus_stop;
 
 		act_bus_stop = get_bus_stop_list_at_index(cell_index->row -1);
 
