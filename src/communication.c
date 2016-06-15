@@ -260,7 +260,7 @@ bool loadStopDetail(char *number) {
 		message_in_progess = TUSSAM_KEY_FETCH_STOP_DETAIL;
 		set_load_in_progress(get_list_type());
 		AppMessageResult res = app_message_outbox_begin(&iter);
-		static bool result = true;
+		bool result = true;
 
 		if (res != APP_MSG_OK) {
 			// Error establishing the connection

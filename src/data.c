@@ -84,6 +84,10 @@ void set_actual_view(int view){
 //		s_stop_detail = NULL;
 	}else if (view == Details && get_JS_is_ready()){
 		listType = Details;
+		if(loaded_detail)
+			s_stop_detail.number_of_lines = 0;
+		loaded_detail = false;
+		list_details_num_of_items = 0;
 //		send_message(&iter, TUSSAM_KEY_NEAR,1);
 //		s_stop_detail = NULL;
 	}
@@ -143,7 +147,7 @@ void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite)
 	}
 
 
-	if(get_load_in_progress() == ListTypeNear && list_nearby_num_of_items == 1){
+	if(get_load_in_progress() == ListTypeNear && list_nearby_num_of_items >= 1){
 		vibes_short_pulse();
 	}
 
@@ -163,9 +167,7 @@ static void line_list_append(char *name, char *bus1, char *bus2) {
 	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus2, bus2);
 	s_stop_detail.number_of_lines++;
 	list_details_num_of_items++;
-
-
-
+	loaded_detail = true;
 }
 
 void received_data(DictionaryIterator *iter, void *context){
