@@ -253,6 +253,9 @@ void update_loading_feedback_favorites(void){ // MEJORAR ! ! ! ! !! !
 		} else {
 			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
 		}
+	}else if(!connection_service_peek_pebble_app_connection()){
+		hide_feedback_layers(false);
+		text_layer_set_text(ui.feedback_text_layer,"No phone connected");
 	}else{
 		show_loading_feedback();
 	}
@@ -326,7 +329,7 @@ static void bus_stop_window_load(Window *window) {
 	text_layer_set_text_alignment(ui.feedback_text_layer, GTextAlignmentCenter);
 
 	layer_add_child(window_layer, text_layer_get_layer(ui.feedback_text_layer));
-	show_loading_feedback();
+	update_loading_feedback_favorites();
 
 	//force_back_button(ui.window, ui.bus_stop_menu_layer);
 	previous_ccp = window_get_click_config_provider(ui.window);
@@ -409,7 +412,7 @@ void bus_stop_show_near(void) {
 	load_view_for_bus_stops_type(Near);
 
 	if(get_bus_list_num_of_items() < 1){
-		show_loading_feedback();
+		update_loading_feedback_favorites();
 	}
 
 // here! ->layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
