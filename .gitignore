@@ -108,3 +108,5 @@ local.properties
 #################
 
 .lock-waf_*_build
+
+node_modules/

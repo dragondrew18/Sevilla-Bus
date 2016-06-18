@@ -30,6 +30,10 @@ void bus_stop_show_favorites_return();
 
 
 // - + - + - Methods - + - + -
+void show_locked(AppLogLevel log_level, const char* description){
+//	APP_LOG(log_level, description);
+}
+
 static void hide_bus_stop_detail_layers(bool hide) {
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "hide_bus_stop_detail_layers( %d )", hide);
 	layer_set_hidden(menu_layer_get_layer(ui.bus_stop_menu_layer), hide);
@@ -42,6 +46,7 @@ static void hide_feedback_layers(bool hide) {
 
 
 void reload_menu(void){
+	show_locked(APP_LOG_LEVEL_INFO, "crash1");
 	// here! ->layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
 
@@ -54,6 +59,7 @@ static void clean_menu(){
 }
 
 static void add_remove_bus_stop_to_favorites(int row_actual) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash2");
 	
 	uint32_t key;
 	BusStopListItem *stopListItem = NULL;
@@ -85,6 +91,7 @@ static void add_remove_bus_stop_to_favorites(int row_actual) {
 static void select2_click_handler(struct MenuLayer *menu_layer,
         MenuIndex *cell_index,
         void *callback_context) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash3");
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "select_click_handler");
 	if(cell_index->row == 0){
@@ -117,15 +124,18 @@ static void select2_long_click_handler(struct MenuLayer *menu_layer,
 }
 
 static uint16_t menu2_get_num_sections_callback(MenuLayer *me, void *data) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash4");
 	return 1;
 }
 
 static uint16_t menu2_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
 //	APP_LOG(APP_LOG_LEVEL_INFO, "Número de items en la lista: %d", get_bus_list_num_of_items());
-		return get_bus_list_num_of_items() + 1;
+	show_locked(APP_LOG_LEVEL_INFO, "crash5");
+	return get_bus_list_num_of_items() + 1;
 }
 
 static int16_t menu2_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_index, void *data) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash6");
 	return 44;
 }
 
@@ -139,12 +149,14 @@ static void click_back_action(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void force_back_button(void *context){
+	show_locked(APP_LOG_LEVEL_INFO, "crash7");
 	previous_ccp(context);
 
 	window_single_click_subscribe(BUTTON_ID_BACK, click_back_action);
 }
 
 static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash8");
 
 	graphics_context_set_text_color(ctx, GColorBlack);
 #ifdef PBL_RECT
@@ -249,6 +261,7 @@ void update_loading_feedback_favorites(bool loaded){ // MEJORAR ! ! ! ! !! !
 
 
 static void show_loading_feedback() { // Juntar con el método anterior !
+	show_locked(APP_LOG_LEVEL_INFO, "crash9");
 	
 	if (get_actual_view() == Favorites) {
 		text_layer_set_text(ui.feedback_text_layer,"Loading favorite bus stops...");
@@ -264,6 +277,7 @@ static void menu2_row_selection_changed(struct MenuLayer *menu_layer,
         MenuIndex new_index,
         MenuIndex old_index,
         void *callback_context){
+	show_locked(APP_LOG_LEVEL_INFO, "crash10");
 
 	// here!2 ->layer_mark_dirty(menu_layer_get_layer(menu_layer));
 }
@@ -324,6 +338,7 @@ static void bus_stop_window_load(Window *window) {
 
 // Deinitialize resources on window unload that were initialized on window load
 static void bus_stop_window_unload(Window *window) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash11");
 	
 	menu_layer_destroy(ui.bus_stop_menu_layer);
 
@@ -332,6 +347,7 @@ static void bus_stop_window_unload(Window *window) {
 }
 
 static void bus_stop_window_appear(Window *window) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash12");
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "bus_stop_window_appear");
 
 	//bus_stop_list_num_of_items = 0;
@@ -345,6 +361,7 @@ static void bus_stop_window_disappear(Window *window) {
 }
 
 static void load_view_for_bus_stops_type(int _listType) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash13");
 	
 	set_actual_view(_listType);
 
@@ -352,11 +369,13 @@ static void load_view_for_bus_stops_type(int _listType) {
 }
 
 void bus_stop_show_favorites(void) { // Usado para la primera carga
+	show_locked(APP_LOG_LEVEL_INFO, "crash14");
 	
 	load_view_for_bus_stops_type(Favorites);
 }
 
 void bus_stop_show_favorites_return(void) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash15");
 
 	set_actual_view(Favorites);
 
@@ -386,6 +405,7 @@ void favorites_bus_stop_deinit(void) {
 }
 
 void bus_stop_show_near(void) {
+	show_locked(APP_LOG_LEVEL_INFO, "crash16");
 
 	clean_menu();
 	load_view_for_bus_stops_type(Near);

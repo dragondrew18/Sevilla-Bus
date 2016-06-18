@@ -95,9 +95,11 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 		APP_LOG(APP_LOG_LEVEL_INFO, "Reshedule message: %dms", WAIT_EMPTY_QUEUE);
 		return true;
 	}else {
+		DictionaryIterator *iter;
+
 		message_in_progess = key;
 		set_load_in_progress(key);
-		AppMessageResult res = app_message_outbox_begin(iterator);
+		AppMessageResult res = app_message_outbox_begin(&iter);
 		bool result = true;
 
 		if (res != APP_MSG_OK) {
@@ -106,7 +108,7 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 			result = false;
 		}
 //		if (dict_write_cstring(*iterator, key, value) != DICT_OK && result) {
-		if (dict_write_uint8(*iterator, key, value) != DICT_OK && result) {
+		if (dict_write_uint8(iter, key, value) != DICT_OK && result) {
 			// Error writing data petition
 			//return;
 			result = false;
@@ -114,12 +116,12 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 		if (result) {
 			res = app_message_outbox_send();
 		}
-		if(res != APP_MSG_OK) {
-			APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the data: %d", (int)res);
-			//return;
+		if(res == APP_MSG_OK) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent! (code:%lu)", (unsigned long) key);
 			result = true;
 		} else {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent! (code:%lu)", (unsigned long) key);
+			APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the data: %d", (int)res);
+			//return;
 			result = false;
 		}
 	return result;
@@ -170,9 +172,8 @@ void wait_message_queue(){
 void test_received_handler(DictionaryIterator *iter, void *context) {
 
 	APP_LOG(APP_LOG_LEVEL_WARNING, "data received! (test)");
-	APP_LOG(APP_LOG_LEVEL_DEBUG_VERBOSE, "data received! (test)");
 
-	Tuple *ready_tuple = dict_find(iter, AppKeyJSReady);
+	Tuple *ready_tuple = dict_find(iter, MESSAGE_KEY_AppKeyJSReady);
 
 	if (ready_tuple){
 		APP_LOG(APP_LOG_LEVEL_INFO, "Ready tuple received");
@@ -214,7 +215,8 @@ void ancillary_init(){
 
 static void test_dropped_handler(AppMessageResult reason, void *context) {
 	// incoming message dropped
-	APP_LOG(APP_LOG_LEVEL_ERROR, "Error catching data in test. Reason: %d", (int) reason);
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Error catching data in test.");
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Reason: %d", (int) reason);
 }
 static void test_out_sent_handler(DictionaryIterator *sent, void *context) {
 	// outgoing message was delivered
@@ -259,7 +261,7 @@ bool loadStopDetail(char *number) {
 				WAIT_EMPTY_QUEUE);
 		return true;
 	} else {
-		message_in_progess = TUSSAM_KEY_FETCH_STOP_DETAIL;
+		message_in_progess = MESSAGE_KEY_fetchStopDetail;
 		set_load_in_progress(message_in_progess);
 		AppMessageResult res = app_message_outbox_begin(&iter);
 		bool result = true;
@@ -269,7 +271,7 @@ bool loadStopDetail(char *number) {
 			APP_LOG(APP_LOG_LEVEL_ERROR, "Error establishing the connection: %d", (int )res);
 			result = false;
 		}
-		if (dict_write_cstring(iter, TUSSAM_KEY_FETCH_STOP_DETAIL, number) != DICT_OK && result) {
+		if (dict_write_cstring(iter, MESSAGE_KEY_fetchStopDetail, number) != DICT_OK && result) {
 			// Error writing data petition
 			//return;
 			result = false;
@@ -280,10 +282,10 @@ bool loadStopDetail(char *number) {
 		if (res != APP_MSG_OK) {
 			APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the data: %d", (int )res);
 			//return;
-			result = true;
-		} else {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent! (code:%lu)", (unsigned long ) TUSSAM_KEY_FETCH_STOP_DETAIL);
 			result = false;
+		} else {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Message succesful sent! (code:%lu)", (unsigned long) MESSAGE_KEY_fetchStopDetail);
+			result = true;
 		}
 		return result;
 	}

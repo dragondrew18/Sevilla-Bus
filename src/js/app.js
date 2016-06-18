@@ -8433,19 +8433,20 @@ function parseNearBusStops(xml, onParsed) {
 		onParsed(stops);
 	});
 }
+var keys = require('message_keys');
 
 function sendMessages(messages, i) {
 	if(i == messages.length - 1) {
-		messages[i]["lastItem"] = i;
+		messages[i][keys.lastItem] = i;
 	}
 	Pebble.sendAppMessage(messages[i], function(e) {
-/* 		console.log("Successfully delivered message with transactionId="+ e.data.transactionId); */
+/*		console.log("Successfully delivered message with transactionId="+ e.data.transactionId); */
 		i++;
 		if(i < messages.length) {
 			sendMessages(messages, i);
 		}
 	}, function(e) {
-/* 		console.log("Unable to deliver message with transactionId=" + e.data.transactionId); */
+/*		console.log("Unable to deliver message with transactionId=" + e.data.transactionId); */
 	});
 }
 
@@ -8453,33 +8454,35 @@ function sendBusStops(stops) {
 
 	if(stops.length > 0) {
 		var messages = [];
-		
 		var i = 0;
 		for(i = 0; i < stops.length; i++) {
 			var stop = stops[i];						
 			var message = {};
-			message["appendStop"] = i;
-			message["stopNumber"] = stop["number"];
-			message["stopName"] = stop["name"];
+			message[keys.appendStop] = i;
+			message[keys.stopNumber] = stop["number"];
+			message[keys.stopName] = stop["name"];
 			var lines = [];
 			var l = 0;
 			for(l = 0; l < stop["lines"].length; l++){
 				lines.push(stop["lines"][l]["name"]);
 			}
-			message["stopLines"] = lines.join(", ");
-			message["stopFavorite"] = isFavorite(stop["number"]) ? 1 : 0;
-			messages.push(message);                
+			message[keys.stopLines] = lines.join(", ");
+			message[keys.stopFavorite] = isFavorite(stop["number"]) ? 1 : 0;
+			messages.push(message);
 		}
 		
 		sendMessages(messages, 0);
 		
 	} else {
 		var message = {};
-		message["noBusStops"] = 1;
+		message[keys.noBusStops] = 1;
 		Pebble.sendAppMessage(message, function(e) {
-/* 			console.log("Successfully delivered message with transactionId="+ e.data.transactionId); */
+//			console.log("Successfully delivered message with transactionId="+ e.data.transactionId);
+//			console.log('Message sent successfully: ' + JSON.stringify(message));
+
 		}, function(e) {
-/* 			console.log("Unable to deliver message with transactionId=" + e.data.transactionId); */
+//			console.log("Unable to deliver message with transactionId=" + e.data.transactionId);
+//			console.log('Message failed: ' + JSON.stringify(e));
 		});
 		
 	}
@@ -8492,7 +8495,7 @@ function getTiempoNodo(codigo) {
 	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true);
 	req.setRequestHeader("Authorization", "Basic " + Base64.encode("infotus-usermobile" + ":" + "2infotus0user1mobile2"));
 	req.setRequestHeader("Content-Type", "text/xml; charset=utf-8");
-    req.setRequestHeader("SOAPAction", "");
+	req.setRequestHeader("SOAPAction", "");
 	req.setRequestHeader("deviceid", Pebble.getAccountToken());
 	req.onload = function(e){
 		if (req.readyState == 4) {
@@ -8508,10 +8511,10 @@ function getTiempoNodo(codigo) {
 						
 						var line = busStop.lines[i];
 						var message = {};
-						message["appendLine"] = i;
-						message["lineNumber"] = line.name;
-						message["bus1Time"] = line.time1 >= 0 ? line.time1 + " min. (" + line.distance1 + "m.)" : "";
-						message["bus2Time"] = line.time2 >= 0 ? line.time2 + " min. (" + line.distance2 + "m.)" : "";
+						message[keys.appendLine] = i;
+						message[keys.lineNumber] = line.name;
+						message[keys.bus1Time] = line.time1 >= 0 ? line.time1 + " min. (" + line.distance1 + "m.)" : "";
+						message[keys.bus2Time] = line.time2 >= 0 ? line.time2 + " min. (" + line.distance2 + "m.)" : "";
 						
 						messages.push(message);
 					}
@@ -8711,6 +8714,8 @@ function locationError(err) {
 var locationOptions = { "timeout": 30000, "maximumAge": 600000 }; 
 
 // },{"xml2js":17}]},{},[37])
+
+
 function receivedMessage(e) {
 	
 	console.log("Received message: " + JSON.stringify(e.payload));

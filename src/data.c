@@ -70,14 +70,16 @@ void set_actual_view(int view){
 	if(view == Favorites && !loaded_favorites){// && get_JS_is_ready()){
 //	if(view == Favorites && !loaded_favorites) && get_JS_is_ready()){
 		listType = Favorites;
-		send_message(&iter, TUSSAM_KEY_FAVORITES,1);
+//		send_message(&iter, TUSSAM_KEY_FAVORITES,1);
+		send_message(&iter, MESSAGE_KEY_favorites,1);
 //		loadStopDetail("517");
 //		send_message(&iter, TUSSAM_KEY_FETCH_STOP_DETAIL,"517");
 //		s_stop_detail = NULL;
 //		send_message(&iter, TUSSAM_KEY_NEAR,1);
 	}else if (view == Near && !loaded_near){// && get_JS_is_ready()){
 		listType = Near;
-		send_message(&iter, TUSSAM_KEY_NEAR,1);
+		send_message(&iter, MESSAGE_KEY_near,1);
+//		send_message(&iter, TUSSAM_KEY_NEAR,1);
 //		loadStopDetail("517");
 
 		//send_message(&iter, TUSSAM_KEY_FAVORITES,1);
@@ -147,7 +149,7 @@ void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite)
 	}
 
 
-	if(get_load_in_progress() == TUSSAM_KEY_NEAR && list_nearby_num_of_items >= 1){
+	if(get_load_in_progress() == TUSSAM_KEY_NEAR && list_nearby_num_of_items == 1){
 		vibes_short_pulse();
 	}
 
@@ -197,6 +199,8 @@ void received_data(DictionaryIterator *iter, void *context){
 //		} else {
 //			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
 //		}
+		reload_menu();
+		update_loading_feedback_favorites(true);
 	} else if (append_stop_tuple) {
 		// update_load_in_progress();
 		bus_stop_scroll_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);

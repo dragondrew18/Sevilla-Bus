@@ -31,7 +31,7 @@ static void init(void) {
 	win_edit_init();
 
 	bus_stop_show_favorites();
-//	bus_stop_detail_show("256", "PiPo");
+//	bus_stop_detail_show("526", "PiPo");
 }
 
 static void deinit(void) {
