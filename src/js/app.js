@@ -8342,8 +8342,8 @@ function parseBusStopTimes(xml, onParsed) {
 	xml2js.parseString(xml, function (err, result) {	
 			
 		var _busStop = result['soap:Envelope']['soap:Body'][0]['ns2:getTiemposNodoResponse'][0]['tiempoNodo'][0];
-		var _number = _busStop['codigo'];
-		var _name = _busStop['descripcion'];
+		var _number = _busStop['codigo'][0];
+		var _name = _busStop['descripcion'][0];
 		
 		/* <lineasCoincidentes>
 			<tiempoLinea>
@@ -8366,7 +8366,7 @@ function parseBusStopTimes(xml, onParsed) {
 		for (i = 0; i < _lines.length; i++) {
 			var _line = _lines[i];
 			var _lineName = _line['label'][0];
-			var _lineDestiny = _line['destino'];
+			var _lineDestiny = _line['destino'][0];
 			var _time1 = _line['estimacion1'][0]['minutos'];
 			var _distance1 = _line['estimacion1'][0]['metros'];
 			var _time2 = _line['estimacion2'][0]['minutos'];
