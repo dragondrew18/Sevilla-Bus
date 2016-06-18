@@ -24,13 +24,13 @@ static void init(void) {
 
 	ancillary_init();
 
-	favorites_bus_stop_init();
+	stop_list_init();
 
 	bus_stop_detail_init();
 
 	win_edit_init();
 
-	bus_stop_show_favorites();
+	stop_list_show_favorites();
 //	bus_stop_detail_show("526", "PiPo");
 }
 
@@ -38,7 +38,7 @@ static void deinit(void) {
 	
 	bus_stop_detail_deinit();
 
-	favorites_bus_stop_deinit();
+	stop_list_deinit();
 
 	win_edit_deinit();
 }

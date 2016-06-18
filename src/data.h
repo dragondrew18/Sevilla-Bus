@@ -65,3 +65,6 @@ void set_actual_view(int view);
 StopDetailItem* get_bus_stop_detail(void);
 
 void define_stop_detail(char *number, char *name);
+
+void add_remove_bus_stop_to_favorites(int position_bus_stop);
+

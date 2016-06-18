@@ -23,11 +23,7 @@ bool in_view = false;
 
 
 // - + - + - Methods - + - + -
-void show_log(AppLogLevel log_level, const char* description){
-	// APP_LOG(log_level, description);
-}
-
-void set_bus_stop_list_hidden(bool hidden) {
+void stop_detail_menu_set_hidden(bool hidden) {
 	show_log(APP_LOG_LEVEL_INFO, "Crash-01");
 
 	layer_set_hidden(menu_layer_get_layer(ui.menu_layer), hidden);
@@ -40,12 +36,12 @@ void set_feedback_message_hidden(bool hidden) {
 }
 
 
-static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data) {
+static uint16_t stop_detail_menu_num_sections(MenuLayer *me, void *data) {
 	show_log(APP_LOG_LEVEL_INFO, "Crash-03");
 	return 1;
 }
 
-static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
+static uint16_t stop_detail_menu_num_rows(MenuLayer *me, uint16_t section_index, void *data) {
 	show_log(APP_LOG_LEVEL_INFO, "Crash-04");
 	if(in_view){
 		return get_bus_stop_detail()->number_of_lines + 1;
@@ -55,7 +51,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index
 //	return 1;
 }
 
-static int16_t menu_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_index, void *data) {
+static int16_t stop_detail_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data) {
 	show_log(APP_LOG_LEVEL_INFO, "Crash-05");
 	return 44;
 }
@@ -66,7 +62,7 @@ static bool got_estimate(char *estimate) {
 	return strcmp(estimate, "") != 0;
 }
 
-static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
+static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
 	counter += 1;
 
 	show_log(APP_LOG_LEVEL_INFO, "Crash-07");
@@ -190,10 +186,10 @@ static void bus_stop_detail_window_load(Window *window) {
 	
 	ui.menu_layer = menu_layer_create(bounds);
 	menu_layer_set_callbacks(ui.menu_layer, NULL, (MenuLayerCallbacks){
-		.get_num_sections = menu_get_num_sections_callback,
-		.get_cell_height = menu_get_cell_height_callback,
-		.get_num_rows = menu_get_num_rows_callback,
-		.draw_row = menu_draw_row_callback,
+		.get_num_sections = stop_detail_menu_num_sections,
+		.get_cell_height = stop_detail_menu_cell_height,
+		.get_num_rows = stop_detail_menu_num_rows,
+		.draw_row = stop_detail_menu_draw_row,
 		.selection_changed = time_row_selection_changed,
 	});
 	show_log(APP_LOG_LEVEL_INFO, "pre definición de colores");
@@ -297,15 +293,15 @@ void update_loading_feedback_details(bool loaded){
 	show_log(APP_LOG_LEVEL_INFO, "Crash-12");
 
 	if(loaded == true && get_bus_list_num_of_items() > 0){
-		set_bus_stop_list_hidden(false);
+		stop_detail_menu_set_hidden(false);
 		set_feedback_message_hidden(true);
 	}else if(loaded == true && get_bus_list_num_of_items() < 1){
 		// hide_feedback_layers(false);
-		set_bus_stop_list_hidden(true);
+		stop_detail_menu_set_hidden(true);
 		set_feedback_message_hidden(false);
 		text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\n Search it !.");
 	}else{
-		set_bus_stop_list_hidden(true);
+		stop_detail_menu_set_hidden(true);
 		set_feedback_message_hidden(false);
 		// show_loading_feedback();
 	}
