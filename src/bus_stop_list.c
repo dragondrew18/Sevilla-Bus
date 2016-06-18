@@ -26,6 +26,7 @@ void bus_stop_show_near();
 void bus_stop_show_favorites();
 static void show_loading_feedback();
 void bus_stop_show_favorites_return();
+void update_loading_feedback_favorites();
 
 
 
@@ -50,13 +51,10 @@ void reload_menu(void){
 	// here! ->layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
 
-	hide_feedback_layers(true);
+	// hide_feedback_layers(true);
+	update_loading_feedback_favorites();
 }
 
-
-static void clean_menu(){
-
-}
 
 static void add_remove_bus_stop_to_favorites(int row_actual) {
 	show_locked(APP_LOG_LEVEL_INFO, "crash2");
@@ -243,8 +241,9 @@ static void menu2_draw_row_callback(GContext* ctx, const Layer *cell_layer, Menu
 
 }
 
-void update_loading_feedback_favorites(bool loaded){ // MEJORAR ! ! ! ! !! !
+void update_loading_feedback_favorites(void){ // MEJORAR ! ! ! ! !! !
 	APP_LOG(APP_LOG_LEVEL_WARNING, "El método update_loading_feedback_favorites necesita mejora");
+	bool loaded = get_bus_list_is_loaded();
 	if(loaded == true && get_bus_list_num_of_items() > 0){
 		hide_feedback_layers(true);
 	}else if(loaded == true && get_bus_list_num_of_items() < 1){
@@ -378,8 +377,8 @@ void bus_stop_show_favorites_return(void) {
 	show_locked(APP_LOG_LEVEL_INFO, "crash15");
 
 	set_actual_view(Favorites);
+	reload_menu();
 
-	clean_menu();
 	// here! ->layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
 //	window_stack_push(ui.window, false /* Animated */);
@@ -407,7 +406,6 @@ void favorites_bus_stop_deinit(void) {
 void bus_stop_show_near(void) {
 	show_locked(APP_LOG_LEVEL_INFO, "crash16");
 
-	clean_menu();
 	load_view_for_bus_stops_type(Near);
 
 	if(get_bus_list_num_of_items() < 1){

@@ -112,7 +112,8 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 		// Line Number
 		graphics_draw_text(ctx, lineTimeItem.name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(2, 5, 30, 24), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 
-		if (got_estimate_1 && got_estimate_2) {
+//		if (got_estimate_1 && got_estimate_2) {
+		if (got_estimate_1 || got_estimate_2) {
 
 			// Time 1
 			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
@@ -120,27 +121,27 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 			// Time 2
 			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 21, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
-		} else if (got_estimate_1) {
-// SI se descomenta falla en el desplazamiento de la lista! ! !
-// Probado con la parada 256
-	// Posible problema, el menú no se borra completamente por lo que al desplazarse solo modificaría ciertas cosas y no todo
-			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 1 !");
-			// Time 1
-//			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-
-		} else if (got_estimate_2) {
-// SI se descomenta falla en el desplazamiento de la lista! ! !
-// Probado con la parada 256
-			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 2 !");
-
-			// Time 2
+//		} else if (got_estimate_1) {
+//// SI se descomenta falla en el desplazamiento de la lista! ! !
+//// Probado con la parada 256
+//	// Posible problema, el menú no se borra completamente por lo que al desplazarse solo modificaría ciertas cosas y no todo
+//			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 1 !");
+//			// Time 1
+////			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+//			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+//
+//		} else if (got_estimate_2) {
+//// SI se descomenta falla en el desplazamiento de la lista! ! !
+//// Probado con la parada 256
+//			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 2 !");
+//
+//			// Time 2
 //			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 		} else { // SI
 			show_log(APP_LOG_LEVEL_INFO, "No estimates !");
 		// No estimates
-//			graphics_draw_text(ctx, "No estimates.", fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+			graphics_draw_text(ctx, "No estimates.", fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 		}
 	}

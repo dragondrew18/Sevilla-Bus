@@ -8515,6 +8515,8 @@ function getTiempoNodo(codigo) {
 						message[keys.lineNumber] = line.name;
 						message[keys.bus1Time] = line.time1 >= 0 ? line.time1 + " min. (" + line.distance1 + "m.)" : "";
 						message[keys.bus2Time] = line.time2 >= 0 ? line.time2 + " min. (" + line.distance2 + "m.)" : "";
+						message[keys.stopName] = busStop.name;
+						message[keys.stopNumber] = busStop.number;
 						
 						messages.push(message);
 					}

@@ -116,6 +116,15 @@ int get_bus_list_num_of_items(void){
 		return 0;
 }
 
+bool get_bus_list_is_loaded(void){
+	if(actual_view == Favorites)
+		return loaded_favorites;
+	else if(actual_view == Near)
+		return loaded_near;
+	else
+		return false;
+}
+
 int get_list_type(void){
 	return listType;
 }
@@ -158,7 +167,7 @@ void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite)
 //	menu_layer_reload_data(ui.bus_stop_menu_layer);
 }
 
-static void line_list_append(char *name, char *bus1, char *bus2) {
+static void line_list_append(char *number_stop, char *name_stop, char *name, char *bus1, char *bus2) {
 
 	if (s_stop_detail.number_of_lines == BUS_STOP_DETAIL_LINES_MAX_ITEMS) {
 		return;
@@ -167,6 +176,9 @@ static void line_list_append(char *name, char *bus1, char *bus2) {
 	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].name, name);
 	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus1, bus1);
 	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus2, bus2);
+	strcpy(s_stop_detail.name, name_stop);
+	strcpy(s_stop_detail.number, number_stop);
+
 	s_stop_detail.number_of_lines++;
 	list_details_num_of_items++;
 	loaded_detail = true;
@@ -199,15 +211,18 @@ void received_data(DictionaryIterator *iter, void *context){
 //		} else {
 //			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
 //		}
+		if(get_load_in_progress() == TUSSAM_KEY_NEAR){
+			loaded_near = true;
+		}else if(get_load_in_progress() == TUSSAM_KEY_FAVORITES){
+			loaded_favorites = true;
+		}
 		reload_menu();
-		update_loading_feedback_favorites(true);
 	} else if (append_stop_tuple) {
 		// update_load_in_progress();
 		bus_stop_scroll_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
 		reload_menu();
-		update_loading_feedback_favorites(true);
 	} else if (append_line_tuple){
-		line_list_append(line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
+		line_list_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
 		reload_details_menu();
 		update_loading_feedback_details(true);
 	}

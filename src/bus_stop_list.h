@@ -6,5 +6,5 @@ void bus_stop_show_favorites(void);
 void bus_stop_show_near(void);
 
 void reload_menu(void);
-void update_loading_feedback_favorites(bool loaded);
+void update_loading_feedback_favorites(void);
 
