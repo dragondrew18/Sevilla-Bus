@@ -335,7 +335,7 @@ void test_received_handler(DictionaryIterator *iter, void *context) {
 	if (ready_tuple){
 		APP_LOG(APP_LOG_LEVEL_INFO, "Ready tuple received");
 		set_JS_is_ready(true);
-		response_received();
+		no_message_in_progress();
 		return;
 	} else {
 		received_data(iter, context);
