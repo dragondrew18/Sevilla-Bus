@@ -313,8 +313,8 @@ static void stop_list_menu_draw_row(GContext* ctx, const Layer *cell_layer, Menu
 			GSize size_lines = graphics_text_layout_get_content_size("Lines:", fonts_get_system_font(FONT_KEY_GOTHIC_18), detail_rect,
 					GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 			//int width_middle = detail_rect.size.w/2;
-			GRect detail_rect_name = GRect(detail_rect.origin.x, detail_rect.origin.y, size_lines.w, detail_rect.size.h);
-			GRect detail_rect_nlines = GRect(detail_rect.origin.x + size_lines.w, detail_rect.origin.y, detail_rect.size.w - size_lines.w, detail_rect.size.h);
+			GRect detail_rect_name = GRect(detail_rect.origin.x + 2, detail_rect.origin.y, size_lines.w, detail_rect.size.h);
+			GRect detail_rect_nlines = GRect(detail_rect.origin.x + 2 + size_lines.w, detail_rect.origin.y, detail_rect.size.w - size_lines.w - 2, detail_rect.size.h);
 
 			// Bus Stop Lines
 

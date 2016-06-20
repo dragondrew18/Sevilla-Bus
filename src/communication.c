@@ -331,12 +331,17 @@ void test_received_handler(DictionaryIterator *iter, void *context) {
 	APP_LOG(APP_LOG_LEVEL_WARNING, "data received! (test)");
 
 	Tuple *ready_tuple = dict_find(iter, MESSAGE_KEY_AppKeyJSReady);
+	Tuple *error_tuple = dict_find(iter, MESSAGE_KEY_fail);
 
 	if (ready_tuple){
 		APP_LOG(APP_LOG_LEVEL_INFO, "Ready tuple received");
 		set_JS_is_ready(true);
 		no_message_in_progress();
 		return;
+	} else if(error_tuple){
+		no_message_in_progress();
+		APP_LOG(APP_LOG_LEVEL_ERROR, "Error in JS");
+
 	} else {
 		received_data(iter, context);
 

@@ -8712,8 +8712,9 @@ function getNodosCercanos(position) {
 
 function locationError(err) {
 	console.log('location error (' + err.code + '): ' + err.message + '[Debería notificarse]');
+	Pebble.sendAppMessage({"fail": 1});
 }
-var locationOptions = { "timeout": 30000, "maximumAge": 600000 }; 
+var locationOptions = { "timeout": 3000, "maximumAge": 600000 }; 
 
 // },{"xml2js":17}]},{},[37])
 
