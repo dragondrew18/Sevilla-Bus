@@ -14,11 +14,9 @@ void response_received(void);
 
 void test_received_handler(DictionaryIterator *iter, void *context);
 
-void ancillary_init(void);
+void communication_init(void);
 
-void ancillary_message_context();
-
-int get_load_in_progress(void);
+uint32_t get_load_in_progress(void);
 
 void set_load_in_progress(int type);
 

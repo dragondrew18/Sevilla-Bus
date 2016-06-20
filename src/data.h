@@ -48,19 +48,19 @@ BusStopListItem* get_bus_stop_list_at_index(int index);
 
 BusStopListItem* get_bus_stop_list_near_at_index(int index);
 
-void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite);
+void received_add_bus_stop_to_list(char *number, char *name, char *lines, int favorite);
 
 void received_data(DictionaryIterator *iter, void *context);
 
-int get_bus_list_num_of_items(void);
+int get_actual_view_list_size(void);
 
 bool get_bus_list_is_loaded(void);
 
 int get_list_type(void);
 
-int get_actual_view(void);
+enum View get_actual_view(void);
 
-void set_actual_view(int view);
+void set_actual_view(enum View view);
 
 StopDetailItem* get_bus_stop_detail(void);
 

@@ -151,7 +151,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 		}
 		puntero_char_array = char_array;
 
-		bus_stop_detail_show(puntero_char_array, "");
+		stop_detail_show(puntero_char_array, "");
 	}else{
 		s_selection++;
 		layer_mark_dirty(ui.s_canvas_layer);

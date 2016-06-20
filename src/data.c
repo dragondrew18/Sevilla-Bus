@@ -6,6 +6,10 @@
 #include "ancillary_methods.h"
 #include "communication.h"
 
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Common Variables  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+
 BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
 BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];
 
@@ -22,12 +26,67 @@ int list_nearby_num_of_items = 0;
 int list_details_num_of_items = 0;
 
 StopDetailItem s_stop_detail;
-
 enum ListType listType = ListTypeFavorites;
 
 
+
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Declaration  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+
 void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, enum ListType listType);
 
+
+
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Methods.actual_view  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+
+enum View get_actual_view(void){
+	return actual_view;
+}
+
+void set_actual_view(enum View view){
+	APP_LOG(APP_LOG_LEVEL_INFO, "Changing to view: %d", view);
+	actual_view = view;
+
+	DictionaryIterator *iter;
+
+	if(view == Favorites){
+//	if(view == Favorites && !loaded_favorites) && get_JS_is_ready()){
+		listType = Favorites;
+		if(!loaded_favorites){
+//			send_message(&iter, TUSSAM_KEY_FAVORITES,1);
+			send_message(&iter, MESSAGE_KEY_favorites,1);
+//			loadStopDetail("517");
+//			send_message(&iter, TUSSAM_KEY_FETCH_STOP_DETAIL,"517");
+//			s_stop_detail = NULL;
+//			send_message(&iter, TUSSAM_KEY_NEAR,1);
+		}
+	}else if (view == Near){// && get_JS_is_ready()){
+		listType = Near;
+		if(!loaded_near){
+			send_message(&iter, MESSAGE_KEY_near,1);
+//			send_message(&iter, TUSSAM_KEY_NEAR,1);
+//			loadStopDetail("517");
+//			send_message(&iter, TUSSAM_KEY_FAVORITES,1);
+		}
+	}else if (view == Details){
+		listType = Details;
+		if(loaded_detail)
+			s_stop_detail.number_of_lines = 0;
+		loaded_detail = false;
+		list_details_num_of_items = 0;
+//		send_message(&iter, TUSSAM_KEY_NEAR,1);
+//		s_stop_detail = NULL;
+	}
+}
+
+
+
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Methods.stop_list  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
 BusStopListItem* get_bus_stop_list_favorites_at_index(int index) {
 	if (index < 0 || index >= BUS_STOP_LIST_MAX_ITEMS) {
@@ -58,64 +117,26 @@ BusStopListItem* get_bus_stop_list_at_index(int index) {
 	}
 }
 
-StopDetailItem* get_bus_stop_detail(void){
-	return &s_stop_detail;
-}
 
-int get_actual_view(void){
-	return actual_view;
-}
-
-void set_actual_view(int view){
-	APP_LOG(APP_LOG_LEVEL_INFO, "Changing to view: %d", view);
-	actual_view = view;
-
-	DictionaryIterator *iter;
-
-	if(view == Favorites && !loaded_favorites){// && get_JS_is_ready()){
-//	if(view == Favorites && !loaded_favorites) && get_JS_is_ready()){
-		listType = Favorites;
-//		send_message(&iter, TUSSAM_KEY_FAVORITES,1);
-		send_message(&iter, MESSAGE_KEY_favorites,1);
-//		loadStopDetail("517");
-//		send_message(&iter, TUSSAM_KEY_FETCH_STOP_DETAIL,"517");
-//		s_stop_detail = NULL;
-//		send_message(&iter, TUSSAM_KEY_NEAR,1);
-	}else if (view == Near && !loaded_near){// && get_JS_is_ready()){
-		listType = Near;
-		send_message(&iter, MESSAGE_KEY_near,1);
-//		send_message(&iter, TUSSAM_KEY_NEAR,1);
-//		loadStopDetail("517");
-
-		//send_message(&iter, TUSSAM_KEY_FAVORITES,1);
-//		s_stop_detail = NULL;
-	}else if (view == Details && get_JS_is_ready()){
-		listType = Details;
-		if(loaded_detail)
-			s_stop_detail.number_of_lines = 0;
-		loaded_detail = false;
-		list_details_num_of_items = 0;
-//		send_message(&iter, TUSSAM_KEY_NEAR,1);
-//		s_stop_detail = NULL;
-	}
-}
-
-void define_stop_detail(char *number, char *name){
-	strcpy(s_stop_detail.name, name);
-	strcpy(s_stop_detail.number, number);
-	APP_LOG(APP_LOG_LEVEL_INFO, "stop_detail definido: %s (%s)", s_stop_detail.name, s_stop_detail.number);
-	loadStopDetail(s_stop_detail.number);
-	APP_LOG(APP_LOG_LEVEL_INFO, "solicitados los datos de la parada");
-
-}
-
-int get_bus_list_num_of_items(void){
+int get_actual_view_list_size(void){
 //	APP_LOG(APP_LOG_LEVEL_INFO, "Número de vista: %d", (int) actual_view);
 	if(actual_view == Favorites)
 		return list_favorites_num_of_items;
 	else if(actual_view == Near)
 		return list_nearby_num_of_items;
 	else if(actual_view == Details)
+		return list_details_num_of_items;
+	else
+		return 0;
+}
+
+int get_actual_message_list_size(void){
+//	APP_LOG(APP_LOG_LEVEL_INFO, "Número de vista: %d", (int) actual_view);
+	if(get_load_in_progress() == MESSAGE_KEY_favorites)
+		return list_favorites_num_of_items;
+	else if(get_load_in_progress() == MESSAGE_KEY_near)
+		return list_nearby_num_of_items;
+	else if(get_load_in_progress() == MESSAGE_KEY_fetchStopDetail)
 		return list_details_num_of_items;
 	else
 		return 0;
@@ -130,19 +151,18 @@ bool get_bus_list_is_loaded(void){
 		return false;
 }
 
+
 int get_list_type(void){
 	return listType;
 }
 
+void received_add_bus_stop_to_list(char *number, char *name, char *lines, int favorite) {
 
-
-void bus_stop_scroll_append(char *number, char *name, char *lines, int favorite) {
-
-	if (list_favorites_num_of_items == BUS_STOP_LIST_MAX_ITEMS) {
+	if (get_actual_message_list_size() == BUS_STOP_LIST_MAX_ITEMS) {
 		return;
 	}
 
-	APP_LOG(APP_LOG_LEVEL_INFO, "Parada recibida: %s desde %d", number, get_load_in_progress());
+	APP_LOG(APP_LOG_LEVEL_INFO, "Parada recibida: %s desde %lu", number, get_load_in_progress());
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "load_in_progress actual: %d", (int) get_load_in_progress());
 
@@ -197,8 +217,27 @@ static void line_list_append(char *number_stop, char *name_stop, char *name, cha
 	loaded_detail = true;
 }
 
-void received_data(DictionaryIterator *iter, void *context){
 
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Methods.stop_detail  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+
+
+StopDetailItem* get_bus_stop_detail(void){
+	return &s_stop_detail;
+}
+
+void define_stop_detail(char *number, char *name){
+	strcpy(s_stop_detail.name, name);
+	strcpy(s_stop_detail.number, number);
+	APP_LOG(APP_LOG_LEVEL_INFO, "stop_detail definido: %s (%s)", s_stop_detail.name, s_stop_detail.number);
+	loadStopDetail(s_stop_detail.number);
+	APP_LOG(APP_LOG_LEVEL_INFO, "solicitados los datos de la parada");
+
+}
+
+void received_data(DictionaryIterator *iter, void *context){
+	APP_LOG(APP_LOG_LEVEL_ERROR, "El método data.received_data debe moverse a communication.c");
 
 	Tuple *append_stop_tuple = dict_find(iter, TUSSAM_KEY_APPEND_STOP);
 	Tuple *stop_number_tuple = dict_find(iter, TUSSAM_KEY_STOP_NUMBER);
@@ -215,15 +254,7 @@ void received_data(DictionaryIterator *iter, void *context){
 	if (no_bus_stops) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "No bus stop in the received_data");
 		no_bus_stop = true;
-//		hide_bus_stop_detail_layers(true);
-//		hide_feedback_layers(false);
-//
-//		if (listType == ListTypeFavorites) {
-//			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\n Search it !.");
-////			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\nLong press in times button to add/remove favorites.");
-//		} else {
-//			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
-//		}
+
 		if(get_load_in_progress() == TUSSAM_KEY_NEAR){
 			loaded_near = true;
 		}else if(get_load_in_progress() == TUSSAM_KEY_FAVORITES){
@@ -232,19 +263,23 @@ void received_data(DictionaryIterator *iter, void *context){
 		stop_list_reload_menu();
 	} else if (append_stop_tuple) {
 		// update_load_in_progress();
-		bus_stop_scroll_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
+		received_add_bus_stop_to_list(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
 		stop_list_reload_menu();
 	} else if (append_line_tuple){
 		line_list_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
-		reload_details_menu();
-		update_loading_feedback_details(true);
+		stop_detail_reload_menu();
+		stop_detail_update_loading_feedback(true);
 	}
 	// menu_layer_reload_data(ui.bus_stop_menu_layer);
 	// refresh_load_in_progress();
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "Received data procesed!");
-
 }
+
+
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Methods.others  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
 void add_remove_bus_stop_to_favorites(int position_bus_stop) {
 	show_log(APP_LOG_LEVEL_INFO, "crash2");
@@ -258,7 +293,7 @@ void add_remove_bus_stop_to_favorites(int position_bus_stop) {
 		key = TUSSAM_KEY_ADD_FAVORITE;
 	}
 
-	APP_LOG(APP_LOG_LEVEL_ERROR, "OJO !! el método add_remove_bus_stop_to_favorites no espera la cola de envío");
+	APP_LOG(APP_LOG_LEVEL_ERROR, "OJO !! el método add_remove_bus_stop_to_favorites NO espera la cola de envío");
 
 	DictionaryIterator *iter;
 

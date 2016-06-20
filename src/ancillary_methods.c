@@ -19,3 +19,7 @@ void show_log(AppLogLevel log_level, const char* description){
 //	APP_LOG(log_level, description);
 }
 
+bool is_empty_char(char *input) {
+	return strcmp(input, "") != 0;
+}
+
