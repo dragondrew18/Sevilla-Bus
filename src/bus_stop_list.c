@@ -249,8 +249,6 @@ static int16_t stop_list_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, 
 }
 
 static void stop_list_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-	show_log(APP_LOG_LEVEL_INFO, "crash8");
-
 	graphics_context_set_text_color(ctx, GColorBlack);
 #ifdef PBL_RECT
 	GRect detail_rect = GRect(48, 0, 93, 42);
@@ -389,22 +387,25 @@ void stop_list_update_loading_feedback(void){
 	bool loaded = get_bus_list_is_loaded();
 
 	stop_list_hide_feedback_layers(false);
-
-	if(loaded == true && get_actual_view_list_size() > 0){
-		stop_list_hide_feedback_layers(true);
-	}else if(loaded == true && get_actual_view_list_size() < 1){
-		if (get_actual_view() == Favorites) {
-			text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n Search it and long press to add to favorites.");
-		} else {
-			text_layer_set_text(ui.feedback_text_layer,"No nearby bus stops.");
-		}
-	}else if(!connection_service_peek_pebble_app_connection()){
-		text_layer_set_text(ui.feedback_text_layer,"No phone connected");
-	}else{
+	if(!connection_service_peek_pebble_app_connection()){
+			text_layer_set_text(ui.feedback_text_layer,"No phone connected");
+	} else if(loaded == false){
 		if (get_actual_view() == Favorites) {
 			text_layer_set_text(ui.feedback_text_layer,"Loading favorite bus stops...");
 		} else {
 			text_layer_set_text(ui.feedback_text_layer,"Loading nearby bus stops...");
+		}
+	} else {
+		if (loaded == true && get_actual_view_list_size() > 0) {
+			stop_list_hide_feedback_layers(true);
+		} else if (loaded == true && get_actual_view_list_size() < 1) {
+			if (get_actual_view() == Favorites) {
+				text_layer_set_text(ui.feedback_text_layer,
+						"No favorite bus stops.\n Search it and long press to add to favorites.");
+			} else {
+				text_layer_set_text(ui.feedback_text_layer,
+						"No nearby bus stops.");
+			}
 		}
 	}
 }

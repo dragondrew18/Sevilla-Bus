@@ -12,21 +12,18 @@
 
 BusStopListItem bus_stop_list_favorites[BUS_STOP_LIST_MAX_ITEMS];
 BusStopListItem bus_stop_list_near[BUS_STOP_LIST_MAX_ITEMS];
+StopDetailItem s_stop_detail;
 
 bool loaded_favorites = false;
 bool loaded_near = false;
 bool loaded_detail = false;
 
-bool no_bus_stop = false;
-
-enum View actual_view = Favorites;
-
 int list_favorites_num_of_items = 0;
 int list_nearby_num_of_items = 0;
 int list_details_num_of_items = 0;
 
-StopDetailItem s_stop_detail;
-enum ListType listType = ListTypeFavorites;
+enum View actual_view = Favorites;
+enum Stop_List_Type stop_list_type = Stop_List_Favorites;
 
 
 
@@ -34,7 +31,7 @@ enum ListType listType = ListTypeFavorites;
  * # + # - # - >  Declaration  < - # - # + #
  * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
-void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, enum ListType listType);
+void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, enum Stop_List_Type listType);
 
 
 
@@ -54,7 +51,7 @@ void set_actual_view(enum View view){
 
 	if(view == Favorites){
 //	if(view == Favorites && !loaded_favorites) && get_JS_is_ready()){
-		listType = Favorites;
+		stop_list_type = Stop_List_Favorites;
 		if(!loaded_favorites){
 //			send_message(&iter, TUSSAM_KEY_FAVORITES,1);
 			send_message(&iter, MESSAGE_KEY_favorites,1);
@@ -62,17 +59,19 @@ void set_actual_view(enum View view){
 //			send_message(&iter, TUSSAM_KEY_FETCH_STOP_DETAIL,"517");
 //			s_stop_detail = NULL;
 //			send_message(&iter, TUSSAM_KEY_NEAR,1);
+		}else{
+			stop_list_update_loading_feedback();
 		}
 	}else if (view == Near){// && get_JS_is_ready()){
-		listType = Near;
+		stop_list_type = Stop_List_Near;
 		if(!loaded_near){
 			send_message(&iter, MESSAGE_KEY_near,1);
 //			send_message(&iter, TUSSAM_KEY_NEAR,1);
 //			loadStopDetail("517");
 //			send_message(&iter, TUSSAM_KEY_FAVORITES,1);
 		}
+		stop_list_update_loading_feedback();
 	}else if (view == Details){
-		listType = Details;
 		if(loaded_detail)
 			s_stop_detail.number_of_lines = 0;
 		loaded_detail = false;
@@ -117,7 +116,6 @@ BusStopListItem* get_bus_stop_list_at_index(int index) {
 	}
 }
 
-
 int get_actual_view_list_size(void){
 //	APP_LOG(APP_LOG_LEVEL_INFO, "Número de vista: %d", (int) actual_view);
 	if(actual_view == Favorites)
@@ -130,7 +128,7 @@ int get_actual_view_list_size(void){
 		return 0;
 }
 
-int get_actual_message_list_size(void){
+int get_actual_message_bus_list_size(void){
 //	APP_LOG(APP_LOG_LEVEL_INFO, "Número de vista: %d", (int) actual_view);
 	if(get_load_in_progress() == MESSAGE_KEY_favorites)
 		return list_favorites_num_of_items;
@@ -151,14 +149,13 @@ bool get_bus_list_is_loaded(void){
 		return false;
 }
 
-
-int get_list_type(void){
-	return listType;
+int get_stop_list_type(void){
+	return stop_list_type;
 }
 
 void received_add_bus_stop_to_list(char *number, char *name, char *lines, int favorite) {
 
-	if (get_actual_message_list_size() == BUS_STOP_LIST_MAX_ITEMS) {
+	if (get_actual_message_bus_list_size() == BUS_STOP_LIST_MAX_ITEMS) {
 		return;
 	}
 
@@ -167,9 +164,9 @@ void received_add_bus_stop_to_list(char *number, char *name, char *lines, int fa
 	APP_LOG(APP_LOG_LEVEL_INFO, "load_in_progress actual: %d", (int) get_load_in_progress());
 
 	if(get_load_in_progress() == TUSSAM_KEY_NEAR){
-		add_bus_stop_to_list(number, name, lines, favorite == 1, ListTypeNear);
+		add_bus_stop_to_list(number, name, lines, favorite == 1, Stop_List_Near);
 	}else if(get_load_in_progress() == TUSSAM_KEY_FAVORITES){
-		add_bus_stop_to_list(number, name, lines, favorite == 1, ListTypeFavorites);
+		add_bus_stop_to_list(number, name, lines, favorite == 1, Stop_List_Favorites);
 	}
 
 
@@ -182,15 +179,15 @@ void received_add_bus_stop_to_list(char *number, char *name, char *lines, int fa
 //	menu_layer_reload_data(ui.bus_stop_menu_layer);
 }
 
-void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, enum ListType listType){
-	if (listType == ListTypeNear){
+void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, enum Stop_List_Type listType){
+	if (listType == Stop_List_Near){
 		strcpy(bus_stop_list_near[list_nearby_num_of_items].number, number);
 		strcpy(bus_stop_list_near[list_nearby_num_of_items].name, name);
 		strcpy(bus_stop_list_near[list_nearby_num_of_items].lines, lines);
 		bus_stop_list_near[list_nearby_num_of_items].favorite = favorite == 1;
 		list_nearby_num_of_items++;
 		loaded_near = true;
-	}else if (listType == ListTypeFavorites){
+	}else if (listType == Stop_List_Favorites){
 		strcpy(bus_stop_list_favorites[list_favorites_num_of_items].number, number);
 		strcpy(bus_stop_list_favorites[list_favorites_num_of_items].name, name);
 		strcpy(bus_stop_list_favorites[list_favorites_num_of_items].lines, lines);
@@ -218,10 +215,10 @@ static void line_list_append(char *number_stop, char *name_stop, char *name, cha
 }
 
 
+
 /* # + # - # + # - # + # - # + # - # + # - # + # - # + #
  * # + # - # - >  Methods.stop_detail  < - # - # + #
  * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
-
 
 StopDetailItem* get_bus_stop_detail(void){
 	return &s_stop_detail;
@@ -253,12 +250,13 @@ void received_data(DictionaryIterator *iter, void *context){
 
 	if (no_bus_stops) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "No bus stop in the received_data");
-		no_bus_stop = true;
 
 		if(get_load_in_progress() == TUSSAM_KEY_NEAR){
 			loaded_near = true;
 		}else if(get_load_in_progress() == TUSSAM_KEY_FAVORITES){
 			loaded_favorites = true;
+		}else if(get_load_in_progress() == TUSSAM_KEY_FETCH_STOP_DETAIL){
+			loaded_detail = true;
 		}
 		stop_list_reload_menu();
 	} else if (append_stop_tuple) {
@@ -275,6 +273,7 @@ void received_data(DictionaryIterator *iter, void *context){
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "Received data procesed!");
 }
+
 
 
 /* # + # - # + # - # + # - # + # - # + # - # + # - # + #
@@ -307,7 +306,7 @@ void add_remove_bus_stop_to_favorites(int position_bus_stop) {
 
 	stopListItem->favorite = !stopListItem->favorite;
 	if(stopListItem->favorite){
-		add_bus_stop_to_list(stopListItem->number, stopListItem->name, stopListItem->lines, stopListItem->favorite, ListTypeFavorites);
+		add_bus_stop_to_list(stopListItem->number, stopListItem->name, stopListItem->lines, stopListItem->favorite, Stop_List_Favorites);
 	}
 
 	stop_list_update_loading_feedback();

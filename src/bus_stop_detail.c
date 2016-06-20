@@ -278,7 +278,7 @@ static void stop_detail_row_selection_changed(struct MenuLayer *menu_layer, Menu
 static void stop_detail_select_back(ClickRecognizerRef recognizer, void *context) {
 	show_log(APP_LOG_LEVEL_WARNING, "corregir metodo click_back_action");
 
-	set_actual_view(Favorites);
+	set_actual_view(get_stop_list_type());
 
 	window_stack_pop(true);
 }

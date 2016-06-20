@@ -17,9 +17,9 @@ typedef struct {
 	bool favorite;
 } BusStopListItem;
 
-enum ListType {
-	ListTypeFavorites,
-	ListTypeNear,
+enum Stop_List_Type {
+	Stop_List_Favorites,
+	Stop_List_Near,
 };
 
 enum View {
@@ -56,7 +56,7 @@ int get_actual_view_list_size(void);
 
 bool get_bus_list_is_loaded(void);
 
-int get_list_type(void);
+int get_stop_list_type(void);
 
 enum View get_actual_view(void);
 
