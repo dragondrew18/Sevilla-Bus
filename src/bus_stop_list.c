@@ -388,7 +388,13 @@ void stop_list_update_loading_feedback(void){
 	bool loaded = get_bus_list_is_loaded();
 
 	stop_list_hide_feedback_layers(false);
-	if(!connection_service_peek_pebble_app_connection()){
+	if(get_has_error_js()){
+		if(get_actual_view() == Favorites){
+			text_layer_set_text(ui.feedback_text_layer, "Something went wrong.");
+		}else{
+			text_layer_set_text(ui.feedback_text_layer, "Something went wrong. \n Maybe the location is not active or there are no nearby stops");
+		}
+	} else if(!connection_service_peek_pebble_app_connection()){
 			text_layer_set_text(ui.feedback_text_layer,"No phone connected");
 	} else if(loaded == false){
 		if (get_actual_view() == Favorites) {

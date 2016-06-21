@@ -18,6 +18,11 @@ bool loaded_favorites = false;
 bool loaded_near = false;
 bool loaded_detail = false;
 
+bool error_js_favorites = false;
+bool error_js_near = false;
+bool error_js_detail = false;
+
+
 int list_favorites_num_of_items = 0;
 int list_nearby_num_of_items = 0;
 int list_details_num_of_items = 0;
@@ -25,7 +30,6 @@ int list_details_num_of_items = 0;
 enum View actual_view = Favorites;
 enum Stop_List_Type stop_list_type = Stop_List_Favorites;
 
-bool error_js = false;
 
 
 
@@ -34,7 +38,7 @@ bool error_js = false;
  * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
 void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, enum Stop_List_Type listType);
-
+void set_error_js(bool input);
 
 
 /* # + # - # + # - # + # - # + # - # + # - # + # - # + #
@@ -250,7 +254,7 @@ void received_data(DictionaryIterator *iter, void *context){
 	Tuple *line_bus2_time_tuple = dict_find(iter, TUSSAM_KEY_BUS_2_TIME);
 	Tuple *error_tuple = dict_find(iter, MESSAGE_KEY_fail);
 
-	error_js = false;
+	set_error_js(false);
 
 	if (no_bus_stops) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "No bus stop in the received_data");
@@ -272,7 +276,7 @@ void received_data(DictionaryIterator *iter, void *context){
 		stop_detail_reload_menu();
 		stop_detail_update_loading_feedback(true);
 	} else if (error_tuple){
-		error_js = true;
+		set_error_js(true);
 		APP_LOG(APP_LOG_LEVEL_INFO, "error loading %d", (int) get_load_in_progress());
 		if(get_load_in_progress() == TUSSAM_KEY_NEAR || get_load_in_progress() == TUSSAM_KEY_FAVORITES){
 			stop_list_update_loading_feedback();
@@ -292,8 +296,26 @@ void received_data(DictionaryIterator *iter, void *context){
  * # + # - # - >  Methods.others  < - # - # + #
  * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
+void set_error_js(bool input){
+	if(get_load_in_progress() == MESSAGE_KEY_favorites){
+		error_js_favorites = input;
+	} else if (get_load_in_progress() == MESSAGE_KEY_near){
+		error_js_near = input;
+	} else if (get_load_in_progress() == MESSAGE_KEY_fetchStopDetail){
+		error_js_detail = input;
+	}
+}
+
 bool get_has_error_js(void){
-	return error_js;
+	if(get_actual_view() == Favorites){
+		return error_js_favorites;
+	} else if (get_actual_view() == Near){
+		return error_js_near;
+	} else if (get_actual_view() == Details){
+		return error_js_detail;
+	} else {
+		return true;
+	}
 }
 
 void add_remove_bus_stop_to_favorites(int position_bus_stop) {

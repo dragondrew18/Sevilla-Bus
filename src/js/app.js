@@ -8681,10 +8681,10 @@ _utf8_decode : function (utftext) {
 function getNodosCercanos(position) {
 	console.log('latitude: ' + position.coords.latitude);
 	console.log('longitude: ' + position.coords.longitude);
-	console.log("Usando una ubicación manual ! ! !");
-	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3807563 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9863238 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+//	console.log("Usando una ubicación manual ! ! !");
 //	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3807563 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9863238 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
-//	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + /*37.3578072*/ position.coords.latitude +'</latitud><longitud xmlns="">' + /*-5.9882894*/ position.coords.longitude + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+//	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3807563 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9863238 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + /*37.3578072*/ position.coords.latitude +'</latitud><longitud xmlns="">' + /*-5.9882894*/ position.coords.longitude + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
 	var req = new XMLHttpRequest();
 	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true);
 	req.setRequestHeader("Authorization", "Basic " + Base64.encode("infotus-usermobile" + ":" + "2infotus0user1mobile2"));
@@ -8699,11 +8699,15 @@ function getNodosCercanos(position) {
 /* 				console.log("responseText" + req.responseText); */
 /* 				console.log("Latitude: " + position.coords.latitude); */		
 /*        console.log("Longitude: " + position.coords.longitude); */ 
+				try{
 				parseNearBusStops(req.responseText, function(stops){
 						
 					lastStops = stops;					
 					sendBusStops(stops);
 				});
+				} catch (error){
+					Pebble.sendAppMessage({"fail": 1});
+				}
 				
 			} else {
 				console.log("Error");
