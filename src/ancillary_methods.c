@@ -16,7 +16,7 @@ void graphics_draw_text_vertically_center(GContext* ctx,
 }
 
 void show_log(AppLogLevel log_level, const char* description){
-//	APP_LOG(log_level, description);
+	APP_LOG(log_level, description);
 }
 
 bool is_empty_char(char *input) {
