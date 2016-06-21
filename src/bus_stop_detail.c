@@ -1,11 +1,12 @@
 #include <pebble.h>
 #include "keys.h"
+#include "data.h"
+#include "ancillary_methods.h"
+#include "communication.h"
 
-#define BUS_STOP_DETAIL_NAME_TEXT_LENGTH (60)
-#define BUS_STOP_DETAIL_NUMBER_TEXT_LENGTH (6)
-#define BUS_STOP_DETAIL_LINES_MAX_ITEMS (10)
-#define BUS_STOP_DETAIL_LINE_NAME_TEXT_LENGTH (10)
-#define BUS_STOP_DETAIL_LINE_TIME_TEXT_LENGTH (20)
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Common Variables  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
 static struct BusStopDetailUi {
 	Window *window;
@@ -13,218 +14,329 @@ static struct BusStopDetailUi {
 	TextLayer *feedback_text_layer;
 } ui;
 
-typedef struct {
-	char name[BUS_STOP_DETAIL_LINE_NAME_TEXT_LENGTH];
-	char bus1[BUS_STOP_DETAIL_LINE_TIME_TEXT_LENGTH];
-	char bus2[BUS_STOP_DETAIL_LINE_TIME_TEXT_LENGTH];
-} LineTimesItem;
+ClickConfigProvider previous_ccp; // ¿es necesario?
+int counter = 0;
 
-typedef struct {
-	char number[BUS_STOP_DETAIL_NUMBER_TEXT_LENGTH];
-	char name[BUS_STOP_DETAIL_NAME_TEXT_LENGTH];
-	LineTimesItem linesTimes[BUS_STOP_DETAIL_LINES_MAX_ITEMS];
-	int number_of_lines;
-} StopDetailItem;
+bool in_view = false;
 
-static StopDetailItem s_stop_detail;
 
-static void line_list_append(char *name, char *bus1, char *bus2) {
-	
-	if (s_stop_detail.number_of_lines == BUS_STOP_DETAIL_LINES_MAX_ITEMS) {
-		return;
-	}
-	
-	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].name, name);
-	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus1, bus1);
-	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus2, bus2);
-	s_stop_detail.number_of_lines++;
-	
+
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Declaration  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+void stop_detail_menu_set_hidden(bool hidden);
+void stop_detail_feedback_set_hidden(bool hidden);
+static uint16_t stop_detail_menu_num_sections(MenuLayer *me, void *data);
+static uint16_t stop_detail_menu_num_rows(MenuLayer *me, uint16_t section_index, void *data);
+static int16_t stop_detail_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data);
+static int16_t stop_detail_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data);
+static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
+static void stop_detail_row_selection_changed(struct MenuLayer *menu_layer, MenuIndex new_index, MenuIndex old_index, void *callback_context);
+static void stop_detail_select_back(ClickRecognizerRef recognizer, void *context);
+static void stop_detail_force_select_back(void *context);
+
+static void stop_detail_window_load(Window *window);
+void stop_detail_init(void);
+void stop_detail_deinit(void);
+void stop_detail_show(char *number, char *name);
+void stop_detail_window_unload(Window *window);
+void stop_detail_window_appear(Window *window);
+
+void stop_detail_reload_menu(void);
+
+
+
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Methods.init  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+
+void stop_detail_init(void) {
+	ui.window = window_create();
+
+	// Setup the window handlers
+	window_set_window_handlers(ui.window, (WindowHandlers) {
+		.load = stop_detail_window_load,
+		.unload = stop_detail_window_unload,
+		.appear = stop_detail_window_appear,
+	});
 }
 
-void set_bus_stop_list_hidden(bool hidden) {
-	
-	layer_set_hidden(menu_layer_get_layer(ui.menu_layer), hidden);
+void stop_detail_deinit(void) {
+  window_destroy(ui.window);
 }
 
-void set_feedback_message_hidden(bool hidden) {
-	
-	layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), hidden);
-}
+void stop_detail_show(char *number, char *name) {
+	show_log(APP_LOG_LEVEL_WARNING, "bus_stop_detail_show");
 
-void bus_stop_detail_out_sent_handler(DictionaryIterator *sent, void *context) {
-	// outgoing message was delivered
-}
+	define_stop_detail(number, name);
+	set_actual_view(Details);
 
+	show_log(APP_LOG_LEVEL_WARNING, "definido el numero y nombre");
 
-void bus_stop_detail_out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
-	// outgoing message failed
-	
-	text_layer_set_text(ui.feedback_text_layer, "Connection error.");
-	set_bus_stop_list_hidden(true);
-	set_feedback_message_hidden(false);
-	
-}
+	window_stack_push(ui.window, true /* Animated */);
 
+	show_log(APP_LOG_LEVEL_WARNING, "OK -> window_stack_push");
 
-void bus_stop_detail_in_received_handler(DictionaryIterator *iter, void *context) {
-	
-	Tuple *append_line_tuple = dict_find(iter, TUSSAM_KEY_APPEND_LINE);
-	Tuple *line_number_tuple = dict_find(iter, TUSSAM_KEY_LINE_NUMBER);
-	Tuple *line_bus1_time_tuple = dict_find(iter, TUSSAM_KEY_BUS_1_TIME);
-	Tuple *line_bus2_time_tuple = dict_find(iter, TUSSAM_KEY_BUS_2_TIME);
-		
-	if (append_line_tuple) {
-		
-		layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), true);
-		
-		if (append_line_tuple->value->uint8 == 0) {
-			s_stop_detail.number_of_lines = 0;
-		}
-		
-		line_list_append(line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
-		menu_layer_reload_data(ui.menu_layer);
-	}
+	layer_mark_dirty(menu_layer_get_layer(ui.menu_layer));
+
+	show_log(APP_LOG_LEVEL_WARNING, "OK -> layer_mark_dirty(menu_layer_get_layer");
+
+	menu_layer_reload_data(ui.menu_layer);
+	show_log(APP_LOG_LEVEL_WARNING, "Recargada la vista Ok");
 }
 
 
-void bus_stop_detail_in_dropped_handler(AppMessageResult reason, void *context) {
-	// incoming message dropped
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "in_dropped_handler");
-}
 
-static uint16_t menu_get_num_sections_callback(MenuLayer *me, void *data) {
-	return 1;
-}
-
-static uint16_t menu_get_num_rows_callback(MenuLayer *me, uint16_t section_index, void *data) {
-	return s_stop_detail.number_of_lines;
-}
-
-static int16_t menu_get_cell_height_callback(MenuLayer *me, MenuIndex* cell_index, void *data) {
-	return 44;
-}
-
-static bool got_estimate(char *estimate) {
-	
-	return strcmp(estimate, "") != 0;
-}
-
-static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-	
-	LineTimesItem lineTimeItem = s_stop_detail.linesTimes[cell_index->row];
-	
-	bool got_estimate_1 = got_estimate(lineTimeItem.bus1);
-	bool got_estimate_2 = got_estimate(lineTimeItem.bus2);
-	
-	graphics_context_set_text_color(ctx, GColorBlack);
-	
-	// Line Number
-	graphics_draw_text(ctx, lineTimeItem.name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(2, 5, 30, 24), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
-		
-	if (got_estimate_1 && got_estimate_2) {
-		
-		// Time 1
-		graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
-		// Time 2
-		graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 21, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
-	} else if (got_estimate_1) {
-		
-		// Time 1
-		graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
-	} else if (got_estimate_2) {
-		
-		// Time 1
-		graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
-	} else {
-		
-		// No estimates
-		graphics_draw_text(ctx, "No estimates.", fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-		
-	}
-	
-}
-
-static void loadStopDetail(char *number) {
-	
-	DictionaryIterator *iter;
-	
-	if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
-		return;
-	}
-	if (dict_write_cstring(iter, TUSSAM_KEY_FETCH_STOP_DETAIL, number) != DICT_OK) {
-		return;
-	}
-	app_message_outbox_send();
-}
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Methods.windows  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
 // This initializes the menu upon window load
-static void bus_stop_detail_window_load(Window *window) {
-	
+static void stop_detail_window_load(Window *window) {
+	show_log(APP_LOG_LEVEL_INFO, "Crash-09");
+	show_log(APP_LOG_LEVEL_INFO, "Empezando a cargar la vista...");
+
 	Layer *window_layer = window_get_root_layer(window);
 	GRect bounds = layer_get_frame(window_layer);
-	
+
 	ui.menu_layer = menu_layer_create(bounds);
 	menu_layer_set_callbacks(ui.menu_layer, NULL, (MenuLayerCallbacks){
-		.get_num_sections = menu_get_num_sections_callback,
-		.get_cell_height = menu_get_cell_height_callback,
-		.get_num_rows = menu_get_num_rows_callback,
-		.draw_row = menu_draw_row_callback,
+		.get_num_sections = stop_detail_menu_num_sections,
+		.get_cell_height = stop_detail_menu_cell_height,
+		.get_num_rows = stop_detail_menu_num_rows,
+		.draw_row = stop_detail_menu_draw_row,
+		.selection_changed = stop_detail_row_selection_changed,
 	});
-	
-	menu_layer_set_click_config_onto_window(ui.menu_layer, ui.window);
+	show_log(APP_LOG_LEVEL_INFO, "pre definición de colores");
+
+#ifdef PBL_COLOR
+	menu_layer_pad_bottom_enable(ui.menu_layer,false);
+	menu_layer_set_highlight_colors(ui.menu_layer,GColorVividCerulean,GColorWhite);
+#endif
 	layer_add_child(window_layer, menu_layer_get_layer(ui.menu_layer));
-	
+
+	menu_layer_set_click_config_onto_window(ui.menu_layer, ui.window);
+
+
+	show_log(APP_LOG_LEVEL_INFO, "Cargado el menu");
+
+
 	// Feedback Text Layer
-	ui.feedback_text_layer = text_layer_create(bounds);
+	GRect feedback_grect = bounds;
+	feedback_grect.origin.y = bounds.size.h / 4 + 5;
+	ui.feedback_text_layer = text_layer_create(feedback_grect);
 	text_layer_set_text_color(ui.feedback_text_layer, GColorBlack);
 	text_layer_set_font(ui.feedback_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(ui.feedback_text_layer, GTextAlignmentCenter);
 	layer_add_child(window_layer, text_layer_get_layer(ui.feedback_text_layer));
-	
+
+	show_log(APP_LOG_LEVEL_INFO, "Cargado el feedback");
 
 	text_layer_set_text(ui.feedback_text_layer, "Loading times...");
-	loadStopDetail(s_stop_detail.number);
+
+	show_log(APP_LOG_LEVEL_INFO, "fin carga de la vista");
+
+	//Force back button
+	previous_ccp = window_get_click_config_provider(ui.window);
+	window_set_click_config_provider_with_context(ui.window, stop_detail_force_select_back, ui.menu_layer);
+
 }
 
 // Deinitialize resources on window unload that were initialized on window load
-void bus_stop_detail_window_unload(Window *window) {
+void stop_detail_window_unload(Window *window) {
+	show_log(APP_LOG_LEVEL_INFO, "Crash-10");
 	menu_layer_destroy(ui.menu_layer);
-	s_stop_detail.number_of_lines = 0;
+	text_layer_destroy(ui.feedback_text_layer); // Originally not exist. After put that the aplication close going back
+	// get_bus_stop_detail.number_of_lines = 0;
 }
 
-void bus_stop_detail_window_appear(Window *window) {
-	
-	app_message_register_inbox_received(bus_stop_detail_in_received_handler);
-	app_message_register_inbox_dropped(bus_stop_detail_in_dropped_handler);
-	app_message_register_outbox_sent(bus_stop_detail_out_sent_handler);
-	app_message_register_outbox_failed(bus_stop_detail_out_failed_handler);
-	
+void stop_detail_window_appear(Window *window) {
+	show_log(APP_LOG_LEVEL_WARNING, "In bus stop detail view");
+	in_view = true;
+	stop_detail_reload_menu();
 }
 
 
-void bus_stop_detail_show(char *number, char *name) {
-	
-	strcpy(s_stop_detail.name, name);
-	strcpy(s_stop_detail.number, number);
-	
-	window_stack_push(ui.window, true /* Animated */);
+
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Methods.menu  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+
+static uint16_t stop_detail_menu_num_sections(MenuLayer *me, void *data) {
+	show_log(APP_LOG_LEVEL_INFO, "Crash-03");
+	return 1;
 }
 
-void bus_stop_detail_init(void) {
-	ui.window = window_create();
-	
-	// Setup the window handlers
-	window_set_window_handlers(ui.window, (WindowHandlers) {
-		.load = bus_stop_detail_window_load,
-		.unload = bus_stop_detail_window_unload,
-		.appear = bus_stop_detail_window_appear,
-	});
+static uint16_t stop_detail_menu_num_rows(MenuLayer *me, uint16_t section_index, void *data) {
+	show_log(APP_LOG_LEVEL_INFO, "Crash-04");
+	if(in_view){
+		return get_bus_stop_detail()->number_of_lines + 1;
+	}else{
+		return 0;
+	}
+//	return 1;
 }
 
-void bus_stop_detail_deinit(void) {
-  window_destroy(ui.window);
+static int16_t stop_detail_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data) {
+	show_log(APP_LOG_LEVEL_INFO, "Crash-05");
+	return 44;
 }
+
+static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
+	counter += 1;
+
+	show_log(APP_LOG_LEVEL_INFO, "Crash-07");
+	
+	show_log(APP_LOG_LEVEL_INFO, "Falla aqui ! !. Al pedir los datos nombre y número de la parada");
+	show_log(APP_LOG_LEVEL_ERROR, "No se muestran todos los tiempos ya que da error");
+
+
+	if(cell_index->row == 0){
+		show_log(APP_LOG_LEVEL_INFO, "cell_index is 0");
+
+		GRect detail_rect = GRect(43, 0, 99, 42);
+//		GRect detail_rect = GRect(48, 0, 93, 42);
+		GRect bus_stop_rect = GRect(2, 0, 45, 42);
+
+		// Bus Stop Name
+		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+				detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
+
+		// Line Number
+		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
+
+
+	}else{
+
+		show_log(APP_LOG_LEVEL_INFO, "cell_index not is 0");
+		//LineTimesItem lineTimeItem;
+
+		//lineTimeItem = get_bus_stop_detail()->linesTimes[(cell_index->row) - 1];
+
+		LineTimesItem lineTimeItem = get_bus_stop_detail()->linesTimes[(cell_index->row) - 1];
+
+		bool got_estimate_1 = is_empty_char(lineTimeItem.bus1);
+		bool got_estimate_2 = is_empty_char(lineTimeItem.bus2);
+
+		if(menu_cell_layer_is_highlighted(cell_layer)){
+			// Bus Stop Lines
+			graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+		}else{
+			graphics_context_set_text_color(ctx, GColorBlack);
+		}
+		// Line Number
+		graphics_draw_text(ctx, lineTimeItem.name, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(2, 5, 30, 24), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+
+		if (got_estimate_1 && got_estimate_2) {
+//		if (got_estimate_1 || got_estimate_2) {
+
+			// Time 1
+			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+			// Time 2
+			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 21, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+		} else if (got_estimate_1) {
+// SI se descomenta falla en el desplazamiento de la lista! ! !
+// Probado con la parada 256
+	// Posible problema, el menú no se borra completamente por lo que al desplazarse solo modificaría ciertas cosas y no todo
+			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 1 !");
+			// Time 1
+			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+//			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+		} else if (got_estimate_2) {
+// SI se descomenta falla en el desplazamiento de la lista! ! !
+// Probado con la parada 256
+			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 2 !");
+
+			// Time 2
+			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+		} else { // SI
+			show_log(APP_LOG_LEVEL_INFO, "No estimates !");
+		// No estimates
+			graphics_draw_text(ctx, "No estimates.", fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+		}
+	}
+	show_log(APP_LOG_LEVEL_INFO, "end_Crash-07");
+
+	
+}
+
+static void stop_detail_row_selection_changed(struct MenuLayer *menu_layer, MenuIndex new_index, MenuIndex old_index, void *callback_context){
+	show_log(APP_LOG_LEVEL_INFO, "Crash-08");
+
+	// here! ->layer_mark_dirty(menu_layer_get_layer(menu_layer));
+	//menu_layer_reload_data(ui.menu_layer);
+
+	// times_row_actual = new_index.row;
+}
+
+static void stop_detail_select_back(ClickRecognizerRef recognizer, void *context) {
+	show_log(APP_LOG_LEVEL_WARNING, "corregir metodo click_back_action");
+
+	set_actual_view(get_stop_list_type());
+
+	window_stack_pop(true);
+}
+
+static void stop_detail_force_select_back(void *context){
+	show_log(APP_LOG_LEVEL_INFO, "Crash-AAAAA-01");
+
+	previous_ccp(context);
+
+	window_single_click_subscribe(BUTTON_ID_BACK, stop_detail_select_back);
+}
+
+
+
+/* # + # - # + # - # + # - # + # - # + # - # + # - # + #
+ * # + # - # - >  Methods.others  < - # - # + #
+ * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+
+void stop_detail_reload_menu(void){
+	show_log(APP_LOG_LEVEL_INFO, "Crash-11");
+//	layer_mark_dirty(menu_layer_get_layer(ui.menu_layer));
+	menu_layer_reload_data(ui.menu_layer);
+
+//	hide_feedback_layers(true);
+//	set_bus_stop_list_hidden(false);
+//	set_feedback_message_hidden(true);
+}
+
+void stop_detail_menu_set_hidden(bool hidden) {
+	show_log(APP_LOG_LEVEL_INFO, "Crash-01");
+
+	layer_set_hidden(menu_layer_get_layer(ui.menu_layer), hidden);
+}
+
+void stop_detail_feedback_set_hidden(bool hidden) {
+	show_log(APP_LOG_LEVEL_INFO, "Crash-02");
+
+	layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), hidden);
+}
+
+void stop_detail_update_loading_feedback(bool loaded){
+	show_log(APP_LOG_LEVEL_INFO, "Crash-12");
+	APP_LOG(APP_LOG_LEVEL_WARNING, "El método stop_detail_update_loading_feedback necesita mejora");
+	APP_LOG(APP_LOG_LEVEL_WARNING, "El método stop_detail_update_loading_feedback no contempla errores en la comunicación");
+
+	if(get_has_error_js()){
+		stop_detail_feedback_set_hidden(false);
+		text_layer_set_text(ui.feedback_text_layer,"Unknown bus number");
+	} else if(loaded == true && get_actual_view_list_size() > 0){
+		stop_detail_menu_set_hidden(false);
+		stop_detail_feedback_set_hidden(true);
+	}else if(loaded == true && get_actual_view_list_size() < 1){
+		// hide_feedback_layers(false);
+		stop_detail_feedback_set_hidden(false);
+		text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\n Search it !.");
+	}else{
+		stop_detail_feedback_set_hidden(false);
+		// show_loading_feedback();
+	}
+}
+
