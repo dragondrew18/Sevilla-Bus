@@ -43,7 +43,8 @@
       "stopNumber": 3,
       "appendStop": 7,
       "lastItem": 16,
-      "bus2Time": 11
+      "bus2Time": 11,
+      "fail": 18
     },
     "enableMultiJS": true,
     "displayName": "Sevilla Bus 2",
