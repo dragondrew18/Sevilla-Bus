@@ -8500,9 +8500,10 @@ function getTiempoNodo(codigo) {
 	req.onload = function(e){
 		if (req.readyState == 4) {
 			if(req.status == 200) {
-				/* console.log("responseText" + req.responseText); */				
+				/* console.log("responseText" + req.responseText); */
+				try{
 				parseBusStopTimes(req.responseText, function(busStop) {
-					/* console.log("message" + JSON.stringify(busStop)); */
+					console.log("message" + JSON.stringify(busStop));
 					
 					var messages = [];
 					var i = 0;
@@ -8524,7 +8525,9 @@ function getTiempoNodo(codigo) {
 					sendMessages(messages, 0);
 						
 				});
-				
+				} catch(error){
+					Pebble.sendAppMessage({"fail": 1});
+				}
 			} else {
 				console.log("Error");
 			}

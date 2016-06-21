@@ -25,6 +25,8 @@ int list_details_num_of_items = 0;
 enum View actual_view = Favorites;
 enum Stop_List_Type stop_list_type = Stop_List_Favorites;
 
+bool error_js = false;
+
 
 
 /* # + # - # + # - # + # - # + # - # + # - # + # - # + #
@@ -159,9 +161,9 @@ void received_add_bus_stop_to_list(char *number, char *name, char *lines, int fa
 		return;
 	}
 
-	APP_LOG(APP_LOG_LEVEL_INFO, "Parada recibida: %s desde %lu", number, get_load_in_progress());
+//	APP_LOG(APP_LOG_LEVEL_INFO, "Parada recibida: %s desde %lu", number, get_load_in_progress());
 
-	APP_LOG(APP_LOG_LEVEL_INFO, "load_in_progress actual: %d", (int) get_load_in_progress());
+//	APP_LOG(APP_LOG_LEVEL_INFO, "load_in_progress actual: %d", (int) get_load_in_progress());
 
 	if(get_load_in_progress() == TUSSAM_KEY_NEAR){
 		add_bus_stop_to_list(number, name, lines, favorite == 1, Stop_List_Near);
@@ -229,7 +231,7 @@ void define_stop_detail(char *number, char *name){
 	strcpy(s_stop_detail.number, number);
 	APP_LOG(APP_LOG_LEVEL_INFO, "stop_detail definido: %s (%s)", s_stop_detail.name, s_stop_detail.number);
 	loadStopDetail(s_stop_detail.number);
-	APP_LOG(APP_LOG_LEVEL_INFO, "solicitados los datos de la parada");
+	show_log(APP_LOG_LEVEL_INFO, "solicitados los datos de la parada");
 
 }
 
@@ -246,7 +248,9 @@ void received_data(DictionaryIterator *iter, void *context){
 	Tuple *line_number_tuple = dict_find(iter, TUSSAM_KEY_LINE_NUMBER);
 	Tuple *line_bus1_time_tuple = dict_find(iter, TUSSAM_KEY_BUS_1_TIME);
 	Tuple *line_bus2_time_tuple = dict_find(iter, TUSSAM_KEY_BUS_2_TIME);
+	Tuple *error_tuple = dict_find(iter, MESSAGE_KEY_fail);
 
+	error_js = false;
 
 	if (no_bus_stops) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "No bus stop in the received_data");
@@ -267,11 +271,19 @@ void received_data(DictionaryIterator *iter, void *context){
 		line_list_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
 		stop_detail_reload_menu();
 		stop_detail_update_loading_feedback(true);
+	} else if (error_tuple){
+		error_js = true;
+		APP_LOG(APP_LOG_LEVEL_INFO, "error loading %d", (int) get_load_in_progress());
+		if(get_load_in_progress() == TUSSAM_KEY_NEAR || get_load_in_progress() == TUSSAM_KEY_FAVORITES){
+			stop_list_update_loading_feedback();
+		}else if(get_load_in_progress() == TUSSAM_KEY_FETCH_STOP_DETAIL){
+			stop_detail_update_loading_feedback(false);
+		}
 	}
 	// menu_layer_reload_data(ui.bus_stop_menu_layer);
 	// refresh_load_in_progress();
 
-	APP_LOG(APP_LOG_LEVEL_INFO, "Received data procesed!");
+	show_log(APP_LOG_LEVEL_INFO, "Received data procesed!");
 }
 
 
@@ -279,6 +291,10 @@ void received_data(DictionaryIterator *iter, void *context){
 /* # + # - # + # - # + # - # + # - # + # - # + # - # + #
  * # + # - # - >  Methods.others  < - # - # + #
  * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
+
+bool get_has_error_js(void){
+	return error_js;
+}
 
 void add_remove_bus_stop_to_favorites(int position_bus_stop) {
 	show_log(APP_LOG_LEVEL_INFO, "crash2");

@@ -1,6 +1,7 @@
 #include <pebble.h>
 #include "keys.h"
 #include "data.h"
+#include "ancillary_methods.h"
 
 /* # + # - # + # - # + # - # + # - # + # - # + # - # + #
  * # + # - # - >  Common Variables  < - # - # + #
@@ -110,7 +111,7 @@ static void test_dropped_handler(AppMessageResult reason, void *context) {
 
 static void test_out_sent_handler(DictionaryIterator *sent, void *context) {
 	// outgoing message was delivered
-	APP_LOG(APP_LOG_LEVEL_INFO, "mensaje recibido en js satisfactoriamente");
+	show_log(APP_LOG_LEVEL_INFO, "mensaje recibido en js satisfactoriamente");
 }
 
 static void test_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
@@ -193,9 +194,9 @@ void wait_message_queue(){
 		else
 			loadStopDetail(toSend.valueChar);
 	}else{
-		APP_LOG(APP_LOG_LEVEL_INFO, "message_in_progess: %d ...", message_in_progess);
-		APP_LOG(APP_LOG_LEVEL_INFO, "is_ready: %d ...", is_ready);
-		APP_LOG(APP_LOG_LEVEL_INFO, "Pointer timer_load_in_progress= %p...", timer_load_in_progress);
+//		APP_LOG(APP_LOG_LEVEL_INFO, "message_in_progess: %d ...", message_in_progess);
+//		APP_LOG(APP_LOG_LEVEL_INFO, "is_ready: %d ...", is_ready);
+//		APP_LOG(APP_LOG_LEVEL_INFO, "Pointer timer_load_in_progress= %p...", timer_load_in_progress);
 		// Aquí es donde dice que no está inicializado timer_load_in_progress
 //		app_timer_cancel(timer_load_in_progress);
 		timer_load_in_progress = app_timer_register(WAIT_EMPTY_QUEUE, wait_message_queue,NULL);
@@ -256,7 +257,7 @@ bool send_message(DictionaryIterator **iterator, const uint32_t key, const uint8
 }
 
 bool loadStopDetail(char *number) {
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "loadStopDetail");
+	show_log(APP_LOG_LEVEL_DEBUG, "loadStopDetail");
 
 	DictionaryIterator *iter;
 
@@ -273,7 +274,7 @@ bool loadStopDetail(char *number) {
 		return true;
 	} else {
 		message_in_progess = MESSAGE_KEY_fetchStopDetail;
-		set_load_in_progress(message_in_progess);
+		set_load_in_progress(MESSAGE_KEY_fetchStopDetail);
 		AppMessageResult res = app_message_outbox_begin(&iter);
 		bool result = true;
 
@@ -328,7 +329,7 @@ void response_received(){
 
 void test_received_handler(DictionaryIterator *iter, void *context) {
 
-	APP_LOG(APP_LOG_LEVEL_WARNING, "data received! (test)");
+	APP_LOG(APP_LOG_LEVEL_INFO, "data received!");
 
 	Tuple *ready_tuple = dict_find(iter, MESSAGE_KEY_AppKeyJSReady);
 	Tuple *error_tuple = dict_find(iter, MESSAGE_KEY_fail);
@@ -339,15 +340,16 @@ void test_received_handler(DictionaryIterator *iter, void *context) {
 		no_message_in_progress();
 		return;
 	} else if(error_tuple){
-		no_message_in_progress();
 		APP_LOG(APP_LOG_LEVEL_ERROR, "Error in JS");
+		received_data(iter, context);
+		no_message_in_progress();
 
 	} else {
 		received_data(iter, context);
 
 		response_received();
 	}
-	APP_LOG(APP_LOG_LEVEL_WARNING, "data procesed!");
+	show_log(APP_LOG_LEVEL_WARNING, "data procesed!");
 }
 
 

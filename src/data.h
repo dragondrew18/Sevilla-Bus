@@ -68,3 +68,5 @@ void define_stop_detail(char *number, char *name);
 
 void add_remove_bus_stop_to_favorites(int position_bus_stop);
 
+bool get_has_error_js(void);
+

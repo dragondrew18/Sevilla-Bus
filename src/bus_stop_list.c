@@ -384,6 +384,7 @@ void stop_list_reload_menu(void){
 
 void stop_list_update_loading_feedback(void){
 	APP_LOG(APP_LOG_LEVEL_WARNING, "El método update_loading_feedback_favorites necesita mejora");
+	APP_LOG(APP_LOG_LEVEL_WARNING, "El método update_loading_feedback_favorites no contempla errores en la comunicación");
 	bool loaded = get_bus_list_is_loaded();
 
 	stop_list_hide_feedback_layers(false);
@@ -411,12 +412,12 @@ void stop_list_update_loading_feedback(void){
 }
 
 void stop_list_hide_detail_layers(bool hide) {
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "hide_bus_stop_detail_layers( %d )", hide);
+	show_log(APP_LOG_LEVEL_DEBUG, "hide_bus_stop_detail_layers( true/false )");
 	layer_set_hidden(menu_layer_get_layer(ui.bus_stop_menu_layer), hide);
 }
 
 void stop_list_hide_feedback_layers(bool hide) {
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "hide_feedback_layers( %d )", hide);
+	show_log(APP_LOG_LEVEL_DEBUG, "hide_feedback_layers( true/false )");
 	layer_set_hidden(text_layer_get_layer(ui.feedback_text_layer), hide);
 }
 
