@@ -22,15 +22,15 @@ typedef struct {
 	char* valueChar;
 } MessageQueue;
 
-static int message_in_progess = (int) AppKeyJSReady;
+int message_in_progess = (int) AppKeyJSReady;
 AppTimer *timer_load_in_progress;
 bool timer_load_in_progress_status = false;
 AppTimer *timer_response;
 bool timer_response_status = false;
 
-static MessageQueue message_queue[MESSAGE_QUEUE_LENGTH];
-static int message_queue_position = 0;
-static int message_queue_position_lower = 0;
+MessageQueue message_queue[MESSAGE_QUEUE_LENGTH];
+int message_queue_position = 0;
+int message_queue_position_lower = 0;
 
 
 
@@ -68,15 +68,13 @@ void communication_init(void){
 
 	app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
 
-	uint32_t inbox_size = heap_bytes_free() / 4;
-	uint32_t outbox_size = heap_bytes_free() / 4;
-	if (inbox_size > app_message_inbox_size_maximum()){
-		inbox_size = app_message_inbox_size_maximum();
-	}
-
-	if (outbox_size > app_message_inbox_size_maximum()){
-		outbox_size = app_message_inbox_size_maximum();
-	}
+#ifdef PBL_PLATFORM_APLITE
+	uint32_t inbox_size = 512;
+	uint32_t outbox_size = 512;
+#else
+	uint32_t inbox_size = app_message_inbox_size_maximum();
+	uint32_t outbox_size = app_message_inbox_size_maximum();
+#endif
 	APP_LOG(APP_LOG_LEVEL_INFO, "Maxium message: %lu, %lu", (unsigned long) inbox_size, (unsigned long) outbox_size);
 
 	app_message_open(inbox_size, outbox_size); // It's necessary by aplite heap. Maximum cause no communication

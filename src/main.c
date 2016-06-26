@@ -13,7 +13,7 @@ static void init(void) {
 	stop_detail_init();
 	win_edit_init();
 
-//	bus_stop_detail_show("526", "");
+//	stop_detail_show("517", "");
 }
 
 static void deinit(void) {
