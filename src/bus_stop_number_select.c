@@ -30,17 +30,17 @@ static int stop_numbers[NUMBER_BUS_STOP_MAX_LENGTH];
 static char s_value_buffers[NUMBER_BUS_STOP_MAX_LENGTH][NUMBER_BUS_STOP_MAX_LENGTH];
 static int s_selection; // Actual position
 
-//#ifdef PBL_RECT
+#ifdef PBL_RECT
 	#define OFFSET_LEFT 3
 	#define OFFSET_TOP 0
 	#define ITEM_HEIGHT 28
 	#define OFFSET_ITEM_TOP 0
-/*#else
+#else
 	#define OFFSET_LEFT 18
 	#define OFFSET_TOP 11
 	#define ITEM_HEIGHT 40
 	#define OFFSET_ITEM_TOP 6
-#endif*/
+#endif
 
 #define SPACING_BETWEEN_NUMBERS (16)
 

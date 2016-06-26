@@ -144,8 +144,9 @@ void stop_list_window_load(Window *window) {
 	layer_add_child(window_layer, menu_layer_get_layer(ui.bus_stop_menu_layer));
 
 	menu_layer_set_click_config_onto_window(ui.bus_stop_menu_layer, ui.window);
-	menu_layer_set_center_focused(ui.bus_stop_menu_layer, false);
-
+	#ifdef PBL_ROUND
+		menu_layer_set_center_focused(ui.bus_stop_menu_layer, false);
+	#endif
 	// Feedback Text Layer
 
 	GRect feedback_grect = bounds;
