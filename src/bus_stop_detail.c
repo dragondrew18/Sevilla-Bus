@@ -79,7 +79,7 @@ void stop_detail_show(char *number, char *name) {
 //	layer_mark_dirty(menu_layer_get_layer(ui.menu_layer));
 
 	menu_layer_reload_data(ui.menu_layer); // Dejar para que se marque la primera línea en la primera carga
-//	stop_detail_update_loading_feedback();
+	stop_detail_update_loading_feedback();
 }
 
 
@@ -313,6 +313,7 @@ void stop_detail_update_loading_feedback(){
 		text_layer_set_text(ui.feedback_text_layer,"No favorite bus stops.\n\n Search it !.");
 	}else{
 		stop_detail_feedback_set_hidden(false);
+		text_layer_set_text(ui.feedback_text_layer,"Loading...");
 		// show_loading_feedback();
 	}
 }
