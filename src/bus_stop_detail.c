@@ -112,13 +112,21 @@ static void stop_detail_window_load(Window *window) {
 
 	menu_layer_set_click_config_onto_window(ui.menu_layer, ui.window);
 
+//	#ifdef PBL_ROUND
+//		menu_layer_set_center_focused(ui.menu_layer, false);
+//	#endif
+
 
 	show_log(APP_LOG_LEVEL_INFO, "Cargado el menu");
 
 
 	// Feedback Text Layer
 	GRect feedback_grect = bounds;
-	feedback_grect.origin.y = bounds.size.h / 4 + 5;
+	#ifdef PBL_RECT
+		feedback_grect.origin.y = bounds.size.h / 4 + 5;
+	#else
+		feedback_grect.origin.y = bounds.size.h / 2 + bounds.size.h / 5;
+	#endif
 
 	ui.feedback_text_layer = text_layer_create(feedback_grect);
 	text_layer_set_text_color(ui.feedback_text_layer, GColorBlack);
@@ -183,9 +191,11 @@ static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, Me
 //	show_log(APP_LOG_LEVEL_ERROR, "No se muestran todos los tiempos ya que da error");
 
 //	APP_LOG(APP_LOG_LEVEL_INFO, "Trying to write the cell... %d", (int) cell_index->row);
+	GRect bounds = layer_get_frame(cell_layer);
 
 
 	if(cell_index->row == 0){
+	#ifdef PBL_RECT
 		GRect detail_rect = GRect(43, 0, 99, 42);
 //		GRect detail_rect = GRect(48, 0, 93, 42);
 		GRect bus_stop_rect = GRect(2, 0, 45, 42);
@@ -197,7 +207,27 @@ static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, Me
 		// Line Number
 		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
 				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
+	#else
+		GRect detail_rect;
+		GRect bus_stop_rect;
 
+		if(menu_cell_layer_is_highlighted(cell_layer)){
+			detail_rect = GRect(43, 0, bounds.size.w - 45, 42);
+			bus_stop_rect = GRect(2, 0, 45, 42);
+
+			// Bus Stop Name
+			graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+					detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
+
+		}else{
+			bus_stop_rect = bounds;
+		}
+
+		// Line Number
+		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
+
+	#endif
 	}else{
 		LineTimesItem lineTimeItem = get_bus_stop_detail()->linesTimes[(cell_index->row) - 1];
 
@@ -216,10 +246,10 @@ static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, Me
 		if (got_estimate_1 && got_estimate_2) {
 
 			// Time 1
-			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, bounds.size.w - 32, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 			// Time 2
-			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 21, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 21, bounds.size.w - 32, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 		}
 		else if (got_estimate_1) {
@@ -228,8 +258,8 @@ static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, Me
 	// Posible problema, el menú no se borra completamente por lo que al desplazarse solo modificaría ciertas cosas y no todo
 			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 1 !");
 			// Time 1
-			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-//			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, bounds.size.w - 32, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+//			graphics_draw_text(ctx, lineTimeItem.bus1, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 0, bounds.size.w - 32, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 		} else if (got_estimate_2) {
 // SI se descomenta falla en el desplazamiento de la lista! ! !
@@ -237,12 +267,12 @@ static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, Me
 			show_log(APP_LOG_LEVEL_INFO, "Only estimate time 2 !");
 
 			// Time 2
-			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+			graphics_draw_text(ctx, lineTimeItem.bus2, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, bounds.size.w - 32, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 		} else { // SI
 			show_log(APP_LOG_LEVEL_INFO, "No estimates !");
 		// No estimates
-			graphics_draw_text(ctx, "No estimates.", fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, 108, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+			graphics_draw_text(ctx, "No estimates.", fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(34, 9, bounds.size.w - 32, 19), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 		}
 	}
@@ -279,7 +309,7 @@ static void stop_detail_force_select_back(void *context){
 
 void stop_detail_reload_menu(void){
 //	layer_mark_dirty(menu_layer_get_layer(ui.menu_layer));
-//	menu_layer_reload_data(ui.menu_layer);
+	menu_layer_reload_data(ui.menu_layer);
 
 //	hide_feedback_layers(true);
 //	set_bus_stop_list_hidden(false);

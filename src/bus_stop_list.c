@@ -123,6 +123,7 @@ void stop_list_window_load(Window *window) {
 
 	//MenuLayer
 
+
 	ui.bus_stop_menu_layer = menu_layer_create(bounds);
 
 	menu_layer_set_callbacks(ui.bus_stop_menu_layer, NULL, (MenuLayerCallbacks){
@@ -143,11 +144,14 @@ void stop_list_window_load(Window *window) {
 	layer_add_child(window_layer, menu_layer_get_layer(ui.bus_stop_menu_layer));
 
 	menu_layer_set_click_config_onto_window(ui.bus_stop_menu_layer, ui.window);
-
+	#ifdef PBL_ROUND
+		menu_layer_set_center_focused(ui.bus_stop_menu_layer, false);
+	#endif
 	// Feedback Text Layer
 
 	GRect feedback_grect = bounds;
 	feedback_grect.origin.y = bounds.size.h / 4 + 5;
+
 
 	ui.feedback_text_layer = text_layer_create(feedback_grect);
 	text_layer_set_text_color(ui.feedback_text_layer, GColorBlack);
