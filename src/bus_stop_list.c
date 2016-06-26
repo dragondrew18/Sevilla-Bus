@@ -34,23 +34,23 @@ void stop_list_update_loading_feedback();
 void stop_list_hide_detail_layers(bool hide);
 void stop_list_hide_feedback_layers(bool hide);
 void stop_list_reload_menu();
-static void stop_list_select_simple(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
-static void stop_list_select_long(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
-static void stop_list_select_back(ClickRecognizerRef recognizer, void *context);
-static void stop_list_force_select_back(void *context);
+void stop_list_select_simple(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
+void stop_list_select_long(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
+void stop_list_select_back(ClickRecognizerRef recognizer, void *context);
+void stop_list_force_select_back(void *context);
 
-static uint16_t stop_list_menu_num_sections(MenuLayer *me, void *data);
-static uint16_t stop_list_menu_num_rows(MenuLayer *me, uint16_t section_index, void *data);
-static int16_t stop_list_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data);
-static void stop_list_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
-static void stop_list_menu_row_selection_changed(struct MenuLayer *menu_layer, MenuIndex new_index,
+uint16_t stop_list_menu_num_sections(MenuLayer *me, void *data);
+uint16_t stop_list_menu_num_rows(MenuLayer *me, uint16_t section_index, void *data);
+int16_t stop_list_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data);
+void stop_list_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
+void stop_list_menu_row_selection_changed(struct MenuLayer *menu_layer, MenuIndex new_index,
 		MenuIndex old_index, void *callback_context);
 
-static void stop_list_window_load(Window *window);
-static void stop_list_window_unload(Window *window);
-static void stop_list_window_appear(Window *window);
-static void stop_list_window_disappear(Window *window);
-static void stop_list_load_stops_type(int _listType);
+void stop_list_window_load(Window *window);
+void stop_list_window_unload(Window *window);
+void stop_list_window_appear(Window *window);
+void stop_list_window_disappear(Window *window);
+void stop_list_load_stops_type(int _listType);
 
 
 
@@ -109,7 +109,7 @@ void stop_list_show_near(void) {
  * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
 // This initializes the menu upon window load
-static void stop_list_window_load(Window *window) {
+void stop_list_window_load(Window *window) {
 
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "bus_stop_window_load");
 
@@ -133,6 +133,8 @@ static void stop_list_window_load(Window *window) {
 		.selection_changed = stop_list_menu_row_selection_changed,
 		.select_click = stop_list_select_simple,
 		.select_long_click= stop_list_select_long,
+//		.select_click = stop_list_select_long,
+//		.select_long_click= stop_list_select_simple,
 	});
 	#ifdef PBL_COLOR
 		menu_layer_pad_bottom_enable(ui.bus_stop_menu_layer,false);
@@ -162,7 +164,7 @@ static void stop_list_window_load(Window *window) {
 }
 
 // Deinitialize resources on window unload that were initialized on window load
-static void stop_list_window_unload(Window *window) {
+void stop_list_window_unload(Window *window) {
 	show_log(APP_LOG_LEVEL_INFO, "crash11");
 
 	menu_layer_destroy(ui.bus_stop_menu_layer);
@@ -171,7 +173,7 @@ static void stop_list_window_unload(Window *window) {
 
 }
 
-static void stop_list_window_appear(Window *window) {
+void stop_list_window_appear(Window *window) {
 	show_log(APP_LOG_LEVEL_INFO, "crash12");
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "bus_stop_window_appear");
 
@@ -179,7 +181,7 @@ static void stop_list_window_appear(Window *window) {
 	menu_layer_reload_data(ui.bus_stop_menu_layer);
 }
 
-static void stop_list_window_disappear(Window *window) {
+void stop_list_window_disappear(Window *window) {
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "bus_stop_window_disappear");
 }
 
@@ -189,7 +191,7 @@ static void stop_list_window_disappear(Window *window) {
  * # + # - # - >  Methods.menu  < - # - # + #
  * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
-static void stop_list_select_simple(struct MenuLayer *menu_layer,
+void stop_list_select_simple(struct MenuLayer *menu_layer,
 		MenuIndex *cell_index, void *callback_context) {
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "select_click_handler");
@@ -203,16 +205,20 @@ static void stop_list_select_simple(struct MenuLayer *menu_layer,
 				cell_index->row - 1);
 
 		stop_detail_show(stopListItem->number, stopListItem->name);
+//		stop_detail_show("527", "");
 	}
 }
 
-static void stop_list_select_long(struct MenuLayer *menu_layer,
+void stop_list_select_long(struct MenuLayer *menu_layer,
 		MenuIndex *cell_index, void *callback_context) {
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "select_long_click_handler");
 	vibes_short_pulse();
 	if(cell_index->row == 0){
-
+		if(get_actual_view() == Favorites){
+			stop_list_show_near();
+		}else if (get_actual_view() == Near)
+			win_edit_show();
 	}else{
 		add_remove_bus_stop_to_favorites(cell_index->row - 1);
 	}
@@ -220,7 +226,7 @@ static void stop_list_select_long(struct MenuLayer *menu_layer,
 
 }
 
-static void stop_list_select_back(ClickRecognizerRef recognizer, void *context) {
+void stop_list_select_back(ClickRecognizerRef recognizer, void *context) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "stop_list_select_back selected");
 
 	if(get_actual_view() == Near){
@@ -229,26 +235,26 @@ static void stop_list_select_back(ClickRecognizerRef recognizer, void *context) 
 		window_stack_pop_all(true);
 }
 
-static void stop_list_force_select_back(void *context){
+void stop_list_force_select_back(void *context){
 	show_log(APP_LOG_LEVEL_INFO, "crash7");
 	previous_ccp(context);
 
 	window_single_click_subscribe(BUTTON_ID_BACK, stop_list_select_back);
 }
 
-static uint16_t stop_list_menu_num_sections(MenuLayer *me, void *data) {
+uint16_t stop_list_menu_num_sections(MenuLayer *me, void *data) {
 	return 1;
 }
 
-static uint16_t stop_list_menu_num_rows(MenuLayer *me, uint16_t section_index, void *data) {
+uint16_t stop_list_menu_num_rows(MenuLayer *me, uint16_t section_index, void *data) {
 	return get_actual_view_list_size() + 1;
 }
 
-static int16_t stop_list_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data) {
+int16_t stop_list_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data) {
 	return 44;
 }
 
-static void stop_list_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
+void stop_list_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
 	graphics_context_set_text_color(ctx, GColorBlack);
 #ifdef PBL_RECT
 	GRect detail_rect = GRect(48, 0, 93, 42);
@@ -354,7 +360,7 @@ static void stop_list_menu_draw_row(GContext* ctx, const Layer *cell_layer, Menu
 
 }
 
-static void stop_list_menu_row_selection_changed(struct MenuLayer *menu_layer, MenuIndex new_index,
+void stop_list_menu_row_selection_changed(struct MenuLayer *menu_layer, MenuIndex new_index,
 		MenuIndex old_index, void *callback_context){
 	show_log(APP_LOG_LEVEL_INFO, "crash10");
 
@@ -367,7 +373,7 @@ static void stop_list_menu_row_selection_changed(struct MenuLayer *menu_layer, M
  * # + # - # - >  Methods.others  < - # - # + #
  * # + # - # + # - # + # - # + # - # + # - # + # - # + # */
 
-static void stop_list_load_stops_type(int _listType) {
+void stop_list_load_stops_type(int _listType) {
 	set_actual_view(_listType);
 
 	window_stack_push(ui.window, true /* Animated */);
@@ -385,7 +391,7 @@ void stop_list_reload_menu(void){
 void stop_list_update_loading_feedback(void){
 	APP_LOG(APP_LOG_LEVEL_WARNING, "El método update_loading_feedback_favorites necesita mejora");
 	APP_LOG(APP_LOG_LEVEL_WARNING, "El método update_loading_feedback_favorites no contempla errores en la comunicación");
-	bool loaded = get_bus_list_is_loaded();
+	bool loaded = get_is_loaded();
 
 	stop_list_hide_feedback_layers(false);
 	if(get_has_error_js()){

@@ -54,7 +54,7 @@ void received_data(DictionaryIterator *iter, void *context);
 
 int get_actual_view_list_size(void);
 
-bool get_bus_list_is_loaded(void);
+bool get_is_loaded(void);
 
 int get_stop_list_type(void);
 

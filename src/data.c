@@ -78,8 +78,7 @@ void set_actual_view(enum View view){
 		}
 		stop_list_update_loading_feedback();
 	}else if (view == Details){
-		if(loaded_detail)
-			s_stop_detail.number_of_lines = 0;
+		s_stop_detail.number_of_lines = 0;
 		loaded_detail = false;
 		list_details_num_of_items = 0;
 //		send_message(&iter, TUSSAM_KEY_NEAR,1);
@@ -146,11 +145,13 @@ int get_actual_message_bus_list_size(void){
 		return 0;
 }
 
-bool get_bus_list_is_loaded(void){
+bool get_is_loaded(void){
 	if(actual_view == Favorites)
 		return loaded_favorites;
 	else if(actual_view == Near)
 		return loaded_near;
+	else if (actual_view == Details)
+		return loaded_detail;
 	else
 		return false;
 }
@@ -273,15 +274,15 @@ void received_data(DictionaryIterator *iter, void *context){
 		stop_list_reload_menu();
 	} else if (append_line_tuple){
 		line_list_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
+		stop_detail_update_loading_feedback();
 		stop_detail_reload_menu();
-		stop_detail_update_loading_feedback(true);
 	} else if (error_tuple){
 		set_error_js(true);
 		APP_LOG(APP_LOG_LEVEL_INFO, "error loading %d", (int) get_load_in_progress());
 		if(get_load_in_progress() == TUSSAM_KEY_NEAR || get_load_in_progress() == TUSSAM_KEY_FAVORITES){
 			stop_list_update_loading_feedback();
 		}else if(get_load_in_progress() == TUSSAM_KEY_FETCH_STOP_DETAIL){
-			stop_detail_update_loading_feedback(false);
+			stop_detail_update_loading_feedback();
 		}
 	}
 	// menu_layer_reload_data(ui.bus_stop_menu_layer);
