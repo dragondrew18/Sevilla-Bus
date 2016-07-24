@@ -8444,10 +8444,13 @@ function sendMessages(messages, i) {
 		i++;
 		if(i < messages.length) {
 			sendMessages(messages, i);
+		}else{
+			Pebble.sendAppMessage({"endMessage": 19});
 		}
 	}, function(e) {
 /*		console.log("Unable to deliver message with transactionId=" + e.data.transactionId); */
 	});
+
 }
 
 function sendBusStops(stops) {
@@ -8479,7 +8482,7 @@ function sendBusStops(stops) {
 		Pebble.sendAppMessage(message, function(e) {
 //			console.log("Successfully delivered message with transactionId="+ e.data.transactionId);
 //			console.log('Message sent successfully: ' + JSON.stringify(message));
-
+			Pebble.sendAppMessage({"endMessage": 19});
 		}, function(e) {
 //			console.log("Unable to deliver message with transactionId=" + e.data.transactionId);
 //			console.log('Message failed: ' + JSON.stringify(e));
@@ -8507,6 +8510,7 @@ function getTiempoNodo(codigo) {
 					
 					var messages = [];
 					var i = 0;
+					var isFav = isFavorite(busStop.number) ? 1 : 0;
 					
 					for (i = 0; i < busStop.lines.length; i++) {
 						
@@ -8518,6 +8522,7 @@ function getTiempoNodo(codigo) {
 						message[keys.bus2Time] = line.time2 >= 0 ? line.time2 + " min. (" + line.distance2 + "m.)" : "";
 						message[keys.stopName] = busStop.name;
 						message[keys.stopNumber] = busStop.number;
+						message[keys.stopFavorite] = isFav;
 						
 						messages.push(message);
 					}
@@ -8526,7 +8531,9 @@ function getTiempoNodo(codigo) {
 						
 				});
 				} catch(error){
-					Pebble.sendAppMessage({"fail": 1});
+					Pebble.sendAppMessage({"fail": 1}, function(e){
+						Pebble.sendAppMessage({"endMessage": 19});
+					});
 				}
 			} else {
 				console.log("Error");
@@ -8678,6 +8685,8 @@ _utf8_decode : function (utftext) {
 
 }
 
+
+
 function getNodosCercanos(position) {
 	console.log('latitude: ' + position.coords.latitude);
 	console.log('longitude: ' + position.coords.longitude);
@@ -8706,7 +8715,9 @@ function getNodosCercanos(position) {
 					sendBusStops(stops);
 				});
 				} catch (error){
-					Pebble.sendAppMessage({"fail": 1});
+					Pebble.sendAppMessage({"fail": 1}, function(e){
+						Pebble.sendAppMessage({"endMessage": 19});
+					});
 				}
 				
 			} else {
@@ -8719,7 +8730,10 @@ function getNodosCercanos(position) {
 
 function locationError(err) {
 	console.log('location error (' + err.code + '): ' + err.message + '[Debería notificarse]');
-	Pebble.sendAppMessage({"fail": 1});
+	Pebble.sendAppMessage({"fail": 1}, function(e){
+		Pebble.sendAppMessage({"endMessage": 19});
+	});
+
 }
 var locationOptions = { "timeout": 3000, "maximumAge": 600000 }; 
 

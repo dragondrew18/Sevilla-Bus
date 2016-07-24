@@ -204,7 +204,7 @@ void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, 
 	}
 }
 
-static void line_list_append(char *number_stop, char *name_stop, char *name, char *bus1, char *bus2) {
+static void line_list_append(char *number_stop, char *name_stop, bool favorite, char *name, char *bus1, char *bus2) {
 
 	if (s_stop_detail.number_of_lines == BUS_STOP_DETAIL_LINES_MAX_ITEMS) {
 		return;
@@ -215,6 +215,7 @@ static void line_list_append(char *number_stop, char *name_stop, char *name, cha
 	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus2, bus2);
 	strcpy(s_stop_detail.name, name_stop);
 	strcpy(s_stop_detail.number, number_stop);
+	s_stop_detail.favorite = favorite == 1;
 
 	s_stop_detail.number_of_lines++;
 	list_details_num_of_items++;
@@ -234,6 +235,7 @@ StopDetailItem* get_bus_stop_detail(void){
 void define_stop_detail(char *number, char *name){
 	strcpy(s_stop_detail.name, name);
 	strcpy(s_stop_detail.number, number);
+	s_stop_detail.favorite = 0;
 	APP_LOG(APP_LOG_LEVEL_INFO, "stop_detail definido: %s (%s)", s_stop_detail.name, s_stop_detail.number);
 	loadStopDetail(s_stop_detail.number);
 	show_log(APP_LOG_LEVEL_INFO, "solicitados los datos de la parada");
@@ -273,7 +275,7 @@ void received_data(DictionaryIterator *iter, void *context){
 		received_add_bus_stop_to_list(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
 		stop_list_reload_menu();
 	} else if (append_line_tuple){
-		line_list_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
+		line_list_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_favorite->value->int8, line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
 		stop_detail_update_loading_feedback();
 		stop_detail_reload_menu();
 	} else if (error_tuple){
