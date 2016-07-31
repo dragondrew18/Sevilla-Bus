@@ -1,6 +1,6 @@
 #pragma once
 
-enum {
+enum Keys {
 	TUSSAM_KEY_FAVORITES,
 	TUSSAM_KEY_NEAR,
 	TUSSAM_KEY_STOP_NAME,
@@ -18,4 +18,5 @@ enum {
 	TUSSAM_KEY_NO_BUS_STOPS,
 	TUSSAM_KEY_FETCH_STOP_DETAIL,
 	TUSSAM_KEY_LAST_ITEM,
+	AppKeyJSReady,
 };

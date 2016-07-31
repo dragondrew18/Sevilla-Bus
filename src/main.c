@@ -1,30 +1,35 @@
 #include <pebble.h>
-#include "main_menu.h"
-#include "bus_stop_list.h"
+#include "communication.h"
 #include "bus_stop_detail.h"
+#include "bus_stop_list.h"
+#include "bus_stop_number_select.h"
 
 static void init(void) {
+	communication_init();
+	stop_list_init();
 
-	main_menu_init();
-	bus_stop_list_init();
-	bus_stop_detail_init();
-	
-	app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
-	app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+	stop_list_show_favorites();
+
+	stop_detail_init();
+	win_edit_init();
+
+//	stop_detail_show("517", "");
 }
 
 static void deinit(void) {
 	
-	main_menu_deinit();
-	bus_stop_list_deinit();
-	bus_stop_detail_deinit();
+	stop_detail_deinit();
+
+	stop_list_deinit();
+
+	win_edit_deinit();
 }
 
 int main(void) {
 	
-  init();
-  app_event_loop();
-  deinit();
+	init();
+	app_event_loop();
+	deinit();
 
-  return 0;
+	return 0;
 }
