@@ -32,6 +32,7 @@ static int16_t stop_detail_menu_cell_height(MenuLayer *me, MenuIndex* cell_index
 static int16_t stop_detail_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data);
 static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 static void stop_detail_row_selection_changed(struct MenuLayer *menu_layer, MenuIndex new_index, MenuIndex old_index, void *callback_context);
+void stop_detail_select_long(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
 static void stop_detail_select_back(ClickRecognizerRef recognizer, void *context);
 static void stop_detail_force_select_back(void *context);
 
@@ -101,6 +102,7 @@ static void stop_detail_window_load(Window *window) {
 		.get_num_rows = stop_detail_menu_num_rows,
 		.draw_row = stop_detail_menu_draw_row,
 		.selection_changed = stop_detail_row_selection_changed,
+		.select_long_click= stop_detail_select_long,
 	});
 	show_log(APP_LOG_LEVEL_INFO, "pre definición de colores");
 
@@ -295,6 +297,17 @@ static void stop_detail_row_selection_changed(struct MenuLayer *menu_layer, Menu
 	// menu_layer_reload_data(ui.menu_layer);
 
 	// times_row_actual = new_index.row;
+}
+
+void stop_detail_select_long(struct MenuLayer *menu_layer,
+		MenuIndex *cell_index, void *callback_context) {
+
+	APP_LOG(APP_LOG_LEVEL_INFO, "select_long_click_handler");
+	vibes_short_pulse();
+	if(cell_index->row == 0){
+		add_remove_bus_stop_to_favorites(-1, get_bus_stop_detail()->number);
+	}
+
 }
 
 static void stop_detail_select_back(ClickRecognizerRef recognizer, void *context) {
