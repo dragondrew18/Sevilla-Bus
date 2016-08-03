@@ -304,7 +304,7 @@ void stop_detail_select_long(struct MenuLayer *menu_layer,
 
 	APP_LOG(APP_LOG_LEVEL_INFO, "select_long_click_handler");
 	vibes_short_pulse();
-	if(cell_index->row == 0){
+	if(cell_index->row == 0 && !(strcmp(get_bus_stop_detail()->name, "") == 0)){
 		add_remove_bus_stop_to_favorites(-1, get_bus_stop_detail()->number);
 	}
 
