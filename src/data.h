@@ -38,6 +38,7 @@ typedef struct {
 typedef struct {
 	char number[BUS_STOP_DETAIL_NUMBER_TEXT_LENGTH];
 	char name[BUS_STOP_DETAIL_NAME_TEXT_LENGTH];
+	bool favorite;
 	LineTimesItem linesTimes[BUS_STOP_DETAIL_LINES_MAX_ITEMS];
 	int number_of_lines;
 } StopDetailItem;
@@ -66,7 +67,7 @@ StopDetailItem* get_bus_stop_detail(void);
 
 void define_stop_detail(char *number, char *name);
 
-void add_remove_bus_stop_to_favorites(int position_bus_stop);
+void add_remove_bus_stop_to_favorites(int position_bus_stop, char *number);
 
 bool get_has_error_js(void);
 
