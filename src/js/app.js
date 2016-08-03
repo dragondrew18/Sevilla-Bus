@@ -8288,10 +8288,15 @@ function addToFavoriteStops(stopNumber) {
 	}
 	
 	if(!added){
-		console.log('ERROR ! ! ! ! ! Se deben pedir los datos de la parada en concreto y añadirlos a la lista de favoritas');
+		getInfoNodo(stopNumber, function(stop){
+			favoriteStops.push(stop);
+			saveFavoriteStops(favoriteStops);
+		});
+	}else{
+		saveFavoriteStops(favoriteStops);
 	}
 	
-	saveFavoriteStops(favoriteStops);
+	
 }
 
 function removeFromFavoriteStops(stopNumber) {
@@ -8396,6 +8401,55 @@ function parseBusStopTimes(xml, onParsed) {
 		
 		//updateFavoriteStop(busStop);		
 		onParsed(busStop);
+	});
+}
+
+function parseBusStopInfo(xml, onParsed) {
+	
+/*
+<ns2:getInfoNodoResponse xmlns:ns2="http://services.infotusws.tussam.com/">
+    <nodoPosicion>
+        <codigo>1</codigo>
+        <descripcion>Campana (Sierpes)</descripcion>
+        <posicion>
+            <latitud>37.3927116394043</latitud>
+            <longitud>-5.995132923126221</longitud>
+            <altura>20.0</altura>
+        </posicion>
+        <lineasCoincidentes>
+            <linea>
+                <macro>27</macro>
+                <label>27</label>
+                <color>#000d6f</color>
+            </linea>
+        </lineasCoincidentes>
+    </nodoPosicion>
+</ns2:getInfoNodoResponse>
+*/
+
+	xml2js.parseString(xml, function (err, result) {
+			
+		var _busStop = result['soap:Envelope']['soap:Body'][0]['ns2:getInfoNodoResponse'][0]['nodoPosicion'][0];
+		var _number = _busStop['codigo'][0];
+		var _name = _busStop['descripcion'][0];
+		
+		var _lines = _busStop["lineasCoincidentes"][0]["linea"];
+		var lines = [];
+		var l = 0;
+		for(l = 0; l < _lines.length; l++) {
+			var _line = {};
+			var _lineName = _lines[l]["label"][0];
+			_line["name"] = _lineName;
+			lines.push(_line);
+		}
+		
+		var stop = {};
+		stop["number"] = _number;
+		stop["name"] = _name;
+		stop["distance"] = "";
+		stop["lines"] = lines;
+		
+		onParsed(stop);
 	});
 }
 
@@ -8540,6 +8594,36 @@ function getTiempoNodo(codigo) {
 					Pebble.sendAppMessage({"fail": 1}, function(e){
 						Pebble.sendAppMessage({"endMessage": 19});
 					});
+				}
+			} else {
+				console.log("Error");
+			}
+		}
+	};	
+	req.send(body);
+}
+
+function getInfoNodo(codigo, onFinish) {
+	var response;
+	var body = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http" ><soap:Body><getInfoNodo xmlns="http://services.infotusws.tussam.com/"><codigo xmlns="">' + codigo + '</codigo></getInfoNodo></soap:Body></soap:Envelope>';
+	var req = new XMLHttpRequest();
+	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true);
+	req.setRequestHeader("Authorization", "Basic " + Base64.encode("infotus-usermobile" + ":" + "2infotus0user1mobile2"));
+	req.setRequestHeader("Content-Type", "text/xml; charset=utf-8");
+	req.setRequestHeader("SOAPAction", "");
+	req.setRequestHeader("deviceid", Pebble.getAccountToken());
+	req.onload = function(e){
+		if (req.readyState == 4) {
+			if(req.status == 200) {
+				/*console.log("responseText from InfoNodo: " + req.responseText);*/
+				try{
+				parseBusStopInfo(req.responseText, function(busStop) {
+					/*console.log("message: " + JSON.stringify(busStop));*/
+					
+					onFinish(busStop);
+				});
+				} catch(error){
+					console.log("Error decoding JSON or onFinish method");
 				}
 			} else {
 				console.log("Error");
