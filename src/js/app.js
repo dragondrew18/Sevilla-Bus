@@ -8277,12 +8277,18 @@ function addToFavoriteStops(stopNumber) {
 	var favoriteStops = getFavoriteStops();
 	
 	var i = 0;
+	var added = false;
 	for(i = 0; i < lastStops.length; i++) {
 		var stop = lastStops[i];
 		if(stop["number"] == stopNumber) {
 			favoriteStops.push(stop);
+			added = true;
 			break;
 		}
+	}
+	
+	if(!added){
+		console.log('ERROR ! ! ! ! ! Se deben pedir los datos de la parada en concreto y añadirlos a la lista de favoritas');
 	}
 	
 	saveFavoriteStops(favoriteStops);
@@ -8690,10 +8696,21 @@ _utf8_decode : function (utftext) {
 function getNodosCercanos(position) {
 	console.log('latitude: ' + position.coords.latitude);
 	console.log('longitude: ' + position.coords.longitude);
-	console.log("Usando una ubicación manual ! ! !");
+//	console.log("Usando una ubicación manual ! ! !");
+
+// Ubicación desconocida
 //	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3807563 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9863238 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+
+// Prado San Sebastián
 //	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3807563 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9863238 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+
+// Ubicación publicidad
+//	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + 37.3912200 /* position.coords.latitude*/ +'</latitud><longitud xmlns="">' + -5.9766340 /* position.coords.longitude*/ + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+
+
+// Usa la ubicación del teléfono (habitual)
 	var body = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" targetNamespace="http://impl.services.infotusws.tussam.com/" xmlns:ns1="http://services.infotusws.tussam.com/" xmlns:ns2="http://schemas.xmlsoap.org/soap/http"><soap:Body><getNodosCercanos xmlns="http://services.infotusws.tussam.com/"><latitud xmlns="">' + /*37.3578072*/ position.coords.latitude +'</latitud><longitud xmlns="">' + /*-5.9882894*/ position.coords.longitude + '</longitud><radio xmlns="">400</radio></getNodosCercanos></soap:Body></soap:Envelope>';
+
 	var req = new XMLHttpRequest();
 	req.open('POST', "http://www.infobustussam.com:9005/InfoTusWS/services/InfoTus?WSDL", true);
 	req.setRequestHeader("Authorization", "Basic " + Base64.encode("infotus-usermobile" + ":" + "2infotus0user1mobile2"));

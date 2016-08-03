@@ -200,8 +200,8 @@ static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, Me
 		GRect detail_rect;
 		GRect bus_stop_rect;
 	#ifdef PBL_RECT
-		detail_rect = GRect(43, 0, 99, 42);
-//		detail_rect = GRect(48, 0, 93, 42);
+//		detail_rect = GRect(43, 0, 99, 42);
+		detail_rect = GRect(48, 0, 93, 42);
 		bus_stop_rect = GRect(2, 0, 45, 42);
 
 		// Bus Stop Name
