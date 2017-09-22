@@ -224,7 +224,7 @@ void stop_list_select_long(struct MenuLayer *menu_layer,
 		}else if (get_actual_view() == Near)
 			win_edit_show();
 	}else{
-		add_remove_bus_stop_to_favorites(cell_index->row - 1);
+		add_remove_bus_stop_to_favorites(cell_index->row - 1, "");
 	}
 	// here!2 ->layer_mark_dirty(menu_layer_get_layer(ui.bus_stop_menu_layer));
 

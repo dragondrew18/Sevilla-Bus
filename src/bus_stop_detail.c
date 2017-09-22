@@ -32,6 +32,7 @@ static int16_t stop_detail_menu_cell_height(MenuLayer *me, MenuIndex* cell_index
 static int16_t stop_detail_menu_cell_height(MenuLayer *me, MenuIndex* cell_index, void *data);
 static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 static void stop_detail_row_selection_changed(struct MenuLayer *menu_layer, MenuIndex new_index, MenuIndex old_index, void *callback_context);
+void stop_detail_select_long(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context);
 static void stop_detail_select_back(ClickRecognizerRef recognizer, void *context);
 static void stop_detail_force_select_back(void *context);
 
@@ -101,6 +102,7 @@ static void stop_detail_window_load(Window *window) {
 		.get_num_rows = stop_detail_menu_num_rows,
 		.draw_row = stop_detail_menu_draw_row,
 		.selection_changed = stop_detail_row_selection_changed,
+		.select_long_click= stop_detail_select_long,
 	});
 	show_log(APP_LOG_LEVEL_INFO, "pre definición de colores");
 
@@ -195,22 +197,18 @@ static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, Me
 
 
 	if(cell_index->row == 0){
+		GRect detail_rect;
+		GRect bus_stop_rect;
 	#ifdef PBL_RECT
-		GRect detail_rect = GRect(43, 0, 99, 42);
-//		GRect detail_rect = GRect(48, 0, 93, 42);
-		GRect bus_stop_rect = GRect(2, 0, 45, 42);
+//		detail_rect = GRect(43, 0, 99, 42);
+		detail_rect = GRect(48, 0, 93, 42);
+		bus_stop_rect = GRect(2, 0, 45, 42);
 
 		// Bus Stop Name
 		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->name, fonts_get_system_font(FONT_KEY_GOTHIC_14),
 				detail_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
 
-		// Line Number
-		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
-				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
 	#else
-		GRect detail_rect;
-		GRect bus_stop_rect;
-
 		if(menu_cell_layer_is_highlighted(cell_layer)){
 			detail_rect = GRect(43, 0, bounds.size.w - 45, 42);
 			bus_stop_rect = GRect(2, 0, 45, 42);
@@ -223,11 +221,26 @@ static void stop_detail_menu_draw_row(GContext* ctx, const Layer *cell_layer, Me
 			bus_stop_rect = bounds;
 		}
 
+	#endif
 		// Line Number
+		GRect rect2 = bus_stop_rect;
+		if(get_bus_stop_detail()->favorite == true){
+			rect2.origin.y += rect2.size.h/8;
+
+			rect2.size.h -= rect2.size.h/4;
+			if(menu_cell_layer_is_highlighted(cell_layer)){
+				graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorBlack));
+				graphics_context_set_fill_color(ctx, GColorWhite);
+			}else{
+				graphics_context_set_text_color(ctx, GColorWhite);
+				graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorFolly, GColorBlack));
+			}
+			graphics_fill_rect(ctx, rect2, 4, GCornersAll);
+		}
+
 		graphics_draw_text_vertically_center(ctx, get_bus_stop_detail()->number, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
 				bus_stop_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter);
 
-	#endif
 	}else{
 		LineTimesItem lineTimeItem = get_bus_stop_detail()->linesTimes[(cell_index->row) - 1];
 
@@ -284,6 +297,17 @@ static void stop_detail_row_selection_changed(struct MenuLayer *menu_layer, Menu
 	// menu_layer_reload_data(ui.menu_layer);
 
 	// times_row_actual = new_index.row;
+}
+
+void stop_detail_select_long(struct MenuLayer *menu_layer,
+		MenuIndex *cell_index, void *callback_context) {
+
+	APP_LOG(APP_LOG_LEVEL_INFO, "select_long_click_handler");
+	vibes_short_pulse();
+	if(cell_index->row == 0 && !(strcmp(get_bus_stop_detail()->name, "") == 0)){
+		add_remove_bus_stop_to_favorites(-1, get_bus_stop_detail()->number);
+	}
+
 }
 
 static void stop_detail_select_back(ClickRecognizerRef recognizer, void *context) {

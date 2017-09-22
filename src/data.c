@@ -39,6 +39,8 @@ enum Stop_List_Type stop_list_type = Stop_List_Favorites;
 
 void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, enum Stop_List_Type listType);
 void set_error_js(bool input);
+int find_index_from_stop_number(char* number, enum View list_to_find);
+char* join_number_lines_from_bus_stop_details(StopDetailItem* input, char *lines);
 
 
 /* # + # - # + # - # + # - # + # - # + # - # + # - # + #
@@ -204,7 +206,7 @@ void add_bus_stop_to_list(char *number, char *name, char *lines, bool favorite, 
 	}
 }
 
-static void line_list_append(char *number_stop, char *name_stop, char *name, char *bus1, char *bus2) {
+static void line_list_append(char *number_stop, char *name_stop, bool favorite, char *name, char *bus1, char *bus2) {
 
 	if (s_stop_detail.number_of_lines == BUS_STOP_DETAIL_LINES_MAX_ITEMS) {
 		return;
@@ -215,6 +217,7 @@ static void line_list_append(char *number_stop, char *name_stop, char *name, cha
 	strcpy(s_stop_detail.linesTimes[s_stop_detail.number_of_lines].bus2, bus2);
 	strcpy(s_stop_detail.name, name_stop);
 	strcpy(s_stop_detail.number, number_stop);
+	s_stop_detail.favorite = favorite == 1;
 
 	s_stop_detail.number_of_lines++;
 	list_details_num_of_items++;
@@ -234,6 +237,7 @@ StopDetailItem* get_bus_stop_detail(void){
 void define_stop_detail(char *number, char *name){
 	strcpy(s_stop_detail.name, name);
 	strcpy(s_stop_detail.number, number);
+	s_stop_detail.favorite = 0;
 	APP_LOG(APP_LOG_LEVEL_INFO, "stop_detail definido: %s (%s)", s_stop_detail.name, s_stop_detail.number);
 	loadStopDetail(s_stop_detail.number);
 	show_log(APP_LOG_LEVEL_INFO, "solicitados los datos de la parada");
@@ -273,7 +277,7 @@ void received_data(DictionaryIterator *iter, void *context){
 		received_add_bus_stop_to_list(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_lines_tuple->value->cstring, stop_favorite->value->int8);
 		stop_list_reload_menu();
 	} else if (append_line_tuple){
-		line_list_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
+		line_list_append(stop_number_tuple->value->cstring, stop_name_tuple->value->cstring, stop_favorite->value->int8, line_number_tuple->value->cstring, line_bus1_time_tuple->value->cstring, line_bus2_time_tuple->value->cstring);
 		stop_detail_update_loading_feedback();
 		stop_detail_reload_menu();
 	} else if (error_tuple){
@@ -319,16 +323,43 @@ bool get_has_error_js(void){
 	}
 }
 
-void add_remove_bus_stop_to_favorites(int position_bus_stop) {
+void add_remove_bus_stop_to_favorites(int input, char *number) {
+	APP_LOG(APP_LOG_LEVEL_ERROR, "El método add_remove_bus_stop_to_favorites está inacabado");
+	//Only one of both
+
 	show_log(APP_LOG_LEVEL_INFO, "crash2");
 
 	uint32_t key;
-	BusStopListItem *stopListItem = NULL;
-	stopListItem = get_bus_stop_list_at_index(position_bus_stop);
-	if (stopListItem->favorite) {
+	bool favState = false;
+	char *name;
+	char lines[BUS_STOP_LINES_TEXT_LENGTH];
+	BusStopListItem *stopListItem;
+	int pos_fav, pos_nearby;
+
+	if(input >= 0){
+		stopListItem = get_bus_stop_list_at_index(input);
+		favState = stopListItem->favorite;
+		number = stopListItem->number;
+		name = stopListItem->name;
+	}else{
+		if(strcmp(number, get_bus_stop_detail()->number) == 0)
+			favState = get_bus_stop_detail()->favorite;
+
+		name = get_bus_stop_detail()->name;
+	}
+
+	pos_fav = find_index_from_stop_number(number, Favorites);
+	pos_nearby = find_index_from_stop_number(number, Near);
+
+	if (favState) {
 		key = TUSSAM_KEY_REMOVE_FAVORITE;
 	} else {
 		key = TUSSAM_KEY_ADD_FAVORITE;
+		if(input < 0){
+			strcpy(lines, join_number_lines_from_bus_stop_details(get_bus_stop_detail(), lines));
+		}else{
+			strcpy(lines, stopListItem->lines);
+		}
 	}
 
 	APP_LOG(APP_LOG_LEVEL_ERROR, "OJO !! el método add_remove_bus_stop_to_favorites NO espera la cola de envío");
@@ -338,19 +369,72 @@ void add_remove_bus_stop_to_favorites(int position_bus_stop) {
 	if (ancillary_app_message_outbox_begin(&iter) != APP_MSG_OK) {
 		return;
 	}
-	if (dict_write_cstring(iter, key, stopListItem->number) != DICT_OK) {
+	if (dict_write_cstring(iter, key, number) != DICT_OK) {
 		return;
 	}
 	ancillary_app_message_outbox_send();
 
-	stopListItem->favorite = !stopListItem->favorite;
-	if(stopListItem->favorite){
-		add_bus_stop_to_list(stopListItem->number, stopListItem->name, stopListItem->lines, stopListItem->favorite, Stop_List_Favorites);
+	if(get_actual_view() == Details){
+		s_stop_detail.favorite = !s_stop_detail.favorite;
+		stop_detail_reload_menu();
 	}
 
-	stop_list_update_loading_feedback();
+
+	if(pos_fav < 0){
+		add_bus_stop_to_list(number, name, lines, !favState, Stop_List_Favorites);
+	}else{
+		stopListItem = get_bus_stop_list_favorites_at_index(pos_fav);
+		stopListItem->favorite = !stopListItem->favorite;
+	}
+
+	if(pos_nearby >= 0){
+		stopListItem = get_bus_stop_list_near_at_index(pos_nearby);
+		stopListItem->favorite = !stopListItem->favorite;
+	}
+
+	if(pos_fav >= 0 || pos_nearby >= 0)
+		stop_list_update_loading_feedback();
+
 
 }
 
+char* join_number_lines_from_bus_stop_details(StopDetailItem* input, char* result){
+	for(int a = 0; a < input->number_of_lines; a++){
+		char *line = input->linesTimes[a].name;
+		if (a == 0){
+			strcpy(result, line);
+		}else{
+			strcat(result, ", ");
+			strcat(result, line);
+		}
+
+	}
+	APP_LOG(APP_LOG_LEVEL_INFO, "Lineas resultantes: '%s'", result);
+	return result;
+}
+
+int find_index_from_stop_number(char* number, enum View list_to_find){
+	int size;
+	int result = -1;
+	BusStopListItem *bus_stop_list;
+
+	if(list_to_find == Favorites){
+		bus_stop_list = bus_stop_list_favorites;
+		size = list_favorites_num_of_items;
+	}else if (list_to_find == Near) {
+		bus_stop_list = bus_stop_list_near;
+		size = list_nearby_num_of_items;
+	}
+	else{
+		bus_stop_list = NULL;
+		size = 0;
+	}
+	for(int i = 0; i < size; i++){
+		if(strcmp(number, bus_stop_list[i].number) == 0)
+			return i;
+	}
+
+	return result;
+}
 
 

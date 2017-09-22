@@ -330,6 +330,7 @@ void test_received_handler(DictionaryIterator *iter, void *context) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "data received!");
 
 	Tuple *ready_tuple = dict_find(iter, MESSAGE_KEY_AppKeyJSReady);
+	Tuple *end_tuple = dict_find(iter, MESSAGE_KEY_endMessage);
 	Tuple *error_tuple = dict_find(iter, MESSAGE_KEY_fail);
 
 	if (ready_tuple){
@@ -343,10 +344,18 @@ void test_received_handler(DictionaryIterator *iter, void *context) {
 		no_message_in_progress();
 
 	} else {
+
 		received_data(iter, context);
 
 		response_received();
 	}
+
+	if(end_tuple){
+			APP_LOG(APP_LOG_LEVEL_INFO, "End tuple received");
+			no_message_in_progress();
+			app_timer_cancel(timer_response);
+	}
+
 	show_log(APP_LOG_LEVEL_WARNING, "data procesed!");
 }
 
