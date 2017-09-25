@@ -1,14 +1,14 @@
 {
-  "version": "2.1.0",
+  "version": "3.1.0",
   "author": "ManuelLR, dragondrew18",
   "private": true,
   "dependencies": {},
-  "name": "Sevilla Bus - Testing",
+  "name": "Sevilla Bus",
   "keywords": [
     "pebble-app"
   ],
   "pebble": {
-    "displayName": "Sevilla Bus - Testing",
+    "displayName": "Sevilla Bus",
     "sdkVersion": "3",
     "resources": {
       "media": [
@@ -21,7 +21,7 @@
       ]
     },
     "projectType": "native",
-    "uuid": "50bfdd11-856c-479c-b3a6-827578d12651",
+    "uuid": "48ecc80f-70d5-4194-8524-f5bd370047c7",
     "messageKeys": {
       "stopFavorite": 5,
       "stopName": 2,
